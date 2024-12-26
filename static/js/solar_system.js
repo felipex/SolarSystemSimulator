@@ -38,7 +38,7 @@ window.addEventListener('DOMContentLoaded', function() {
         // Create Sun with improved texture
         const sunMaterial = new BABYLON.StandardMaterial("sunMaterial", scene);
         sunMaterial.emissiveTexture = new BABYLON.Texture(
-            "https://raw.githubusercontent.com/BabylonJS/Babylon.js/master/Playground/textures/sun.jpg",
+            "https://www.babylonjs-playground.com/textures/sun.jpg",
             scene
         );
         sunMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
@@ -54,14 +54,15 @@ window.addEventListener('DOMContentLoaded', function() {
         // Create Earth with realistic texture
         const earthMaterial = new BABYLON.StandardMaterial("earthMaterial", scene);
         earthMaterial.diffuseTexture = new BABYLON.Texture(
-            "https://raw.githubusercontent.com/BabylonJS/Babylon.js/master/Playground/textures/earth.jpg",
+            "https://www.babylonjs-playground.com/textures/earth.jpg",
             scene
         );
         earthMaterial.bumpTexture = new BABYLON.Texture(
-            "https://raw.githubusercontent.com/BabylonJS/Babylon.js/master/Playground/textures/earthbump.jpg",
+            "https://www.babylonjs-playground.com/textures/earthbump.jpg",
             scene
         );
         earthMaterial.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+        earthMaterial.bumpTexture.level = 1.0;
 
         const earth = BABYLON.MeshBuilder.CreateSphere(
             "earth",
@@ -87,13 +88,14 @@ window.addEventListener('DOMContentLoaded', function() {
         // Create Moon with realistic texture
         const moonMaterial = new BABYLON.StandardMaterial("moonMaterial", scene);
         moonMaterial.diffuseTexture = new BABYLON.Texture(
-            "https://raw.githubusercontent.com/BabylonJS/Babylon.js/master/Playground/textures/moon.jpg",
+            "https://www.babylonjs-playground.com/textures/moon.jpg",
             scene
         );
         moonMaterial.bumpTexture = new BABYLON.Texture(
-            "https://raw.githubusercontent.com/BabylonJS/Babylon.js/master/Playground/textures/moonbump.jpg",
+            "https://www.babylonjs-playground.com/textures/moonbump.jpg",
             scene
         );
+        moonMaterial.bumpTexture.level = 0.8;
 
         const moon = BABYLON.MeshBuilder.CreateSphere(
             "moon",
