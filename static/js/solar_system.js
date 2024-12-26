@@ -146,6 +146,24 @@ window.addEventListener('DOMContentLoaded', function() {
             0.001
         );
 
+        const uranus = createPlanet(
+            "uranus",
+            10,
+            "https://www.solarsystemscope.com/textures/download/2k_uranus.jpg",
+            150,
+            0.034,
+            0.0007
+        );
+
+        const neptune = createPlanet(
+            "neptune",
+            9.5,
+            "https://www.solarsystemscope.com/textures/download/2k_neptune.jpg",
+            180,
+            0.032,
+            0.0005
+        );
+
         // Create Saturn's rings
         const ringMaterial = new BABYLON.StandardMaterial("saturnRingMaterial", scene);
         ringMaterial.diffuseTexture = new BABYLON.Texture(
@@ -189,7 +207,7 @@ window.addEventListener('DOMContentLoaded', function() {
         let angle = 0;
         scene.registerBeforeRender(function() {
             // Planet orbits and rotations
-            [mercury, venus, earth, mars, jupiter, saturn].forEach(planet => {
+            [mercury, venus, earth, mars, jupiter, saturn, uranus, neptune].forEach(planet => {
                 planet.position.x = Math.cos(angle * planet.orbitSpeed) * planet.position.length();
                 planet.position.z = Math.sin(angle * planet.orbitSpeed) * planet.position.length();
                 planet.rotation.y += planet.rotationSpeed;
