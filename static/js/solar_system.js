@@ -7,15 +7,47 @@ window.addEventListener('DOMContentLoaded', function() {
     const celestialBodies = {
         sun: {
             name: "The Sun",
-            facts: "Type: Yellow Dwarf Star\nDiameter: 1.39 million km\nSurface Temperature: 5,500°C\nAge: 4.6 billion years",
+            facts: {
+                type: "Yellow Dwarf Star (G2V)",
+                diameter: "1.39 million kilometers (109× Earth)",
+                mass: "1.989 × 10^30 kg (333,000× Earth)",
+                surfaceTemp: "5,500°C (photosphere)",
+                coreTemp: "15 million°C",
+                age: "4.6 billion years",
+                composition: "73% Hydrogen, 25% Helium, 2% other elements",
+                rotation: "27 days at equator",
+                interesting: "Produces energy through nuclear fusion of hydrogen into helium"
+            }
         },
         earth: {
             name: "Earth",
-            facts: "Type: Terrestrial Planet\nDiameter: 12,742 km\nOrbital Period: 365.25 days\nMoons: 1\nAtmosphere: 78% Nitrogen, 21% Oxygen",
+            facts: {
+                type: "Terrestrial Planet",
+                diameter: "12,742 kilometers",
+                mass: "5.97 × 10^24 kg",
+                distanceFromSun: "149.6 million kilometers (1 AU)",
+                orbitalPeriod: "365.25 days",
+                dayLength: "23 hours, 56 minutes",
+                atmosphere: "78% Nitrogen, 21% Oxygen, 1% other gases",
+                moons: "1 (The Moon)",
+                avgTemp: "15°C (global average)",
+                interesting: "Only known planet with confirmed life"
+            }
         },
         moon: {
             name: "The Moon",
-            facts: "Type: Natural Satellite\nDiameter: 3,474 km\nOrbital Period: 27.3 days\nDistance from Earth: 384,400 km\nSurface Temperature: -233°C to 123°C",
+            facts: {
+                type: "Natural Satellite",
+                diameter: "3,474 kilometers",
+                mass: "7.34 × 10^22 kg",
+                distanceFromEarth: "384,400 kilometers (average)",
+                orbitalPeriod: "27.3 days",
+                surfaceTemp: "-233°C to 123°C",
+                atmosphere: "Extremely thin (exosphere)",
+                composition: "Rock and iron-rich core",
+                gravity: "1/6 of Earth's gravity",
+                interesting: "Same face always points toward Earth (tidally locked)"
+            }
         }
     };
 
@@ -159,10 +191,20 @@ window.addEventListener('DOMContentLoaded', function() {
 
             if (pickResult.hit && celestialBodies[pickResult.pickedMesh.name]) {
                 const body = celestialBodies[pickResult.pickedMesh.name];
+                const facts = body.facts;
+
+                let tooltipContent = `<strong>${body.name}</strong>`;
+                for (let key in facts) {
+                    const label = key.charAt(0).toUpperCase() + key.slice(1)
+                        .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+                        .trim();
+                    tooltipContent += `<div><span class="fact-label">${label}:</span> ${facts[key]}</div>`;
+                }
+
                 tooltip.style.display = 'block';
                 tooltip.style.left = evt.clientX + 10 + 'px';
                 tooltip.style.top = evt.clientY + 10 + 'px';
-                tooltip.innerHTML = `<strong>${body.name}</strong><br>${body.facts.replace(/\n/g, '<br>')}`;
+                tooltip.innerHTML = tooltipContent;
             } else {
                 tooltip.style.display = 'none';
             }

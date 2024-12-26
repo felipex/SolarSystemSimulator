@@ -16,14 +16,30 @@ html, body {
 .tooltip {
     display: none;
     position: absolute;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0, 0, 0, 0.9);
     color: white;
-    padding: 10px;
-    border-radius: 5px;
+    padding: 15px;
+    border-radius: 8px;
     font-family: Arial, sans-serif;
     font-size: 14px;
-    max-width: 250px;
+    max-width: 300px;
     z-index: 1000;
     pointer-events: none;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+    line-height: 1.4;
+}
+
+.tooltip strong {
+    color: #ffd700;
+    font-size: 16px;
+    display: block;
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 4px;
+}
+
+.tooltip .fact-label {
+    color: #88ccff;
+    font-weight: bold;
 }
