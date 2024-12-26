@@ -1,4 +1,110 @@
 window.addEventListener('DOMContentLoaded', function() {
+    // Initialize audio context and effects
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    let audioEnabled = false;
+    const volumeSlider = document.getElementById('volumeSlider');
+    const toggleAudioButton = document.getElementById('toggleAudio');
+
+    // Create planetary sound generators
+    const planetarySounds = {
+        sun: {
+            synth: new Tone.FMSynth({
+                harmonicity: 0.5,
+                modulationIndex: 10,
+                oscillator: { type: "sine" },
+                envelope: {
+                    attack: 1,
+                    decay: 2,
+                    sustain: 1,
+                    release: 4
+                }
+            }).toDestination(),
+            note: "C2"
+        },
+        mercury: {
+            synth: new Tone.AMSynth({
+                harmonicity: 2,
+                oscillator: { type: "triangle" }
+            }).toDestination(),
+            note: "E4"
+        },
+        venus: {
+            synth: new Tone.DuoSynth({
+                vibratoAmount: 0.5,
+                vibratoRate: 5
+            }).toDestination(),
+            note: "G4"
+        },
+        earth: {
+            synth: new Tone.PolySynth(Tone.Synth).toDestination(),
+            note: ["C4", "E4", "G4"]
+        },
+        mars: {
+            synth: new Tone.MetalSynth({
+                frequency: 200,
+                envelope: {
+                    attack: 0.001,
+                    decay: 1.4,
+                    release: 0.2
+                }
+            }).toDestination(),
+            note: "D4"
+        },
+        jupiter: {
+            synth: new Tone.FMSynth({
+                harmonicity: 1.5,
+                modulationIndex: 5
+            }).toDestination(),
+            note: "G2"
+        },
+        saturn: {
+            synth: new Tone.PluckSynth({
+                attackNoise: 1,
+                dampening: 4000,
+                resonance: 0.98
+            }).toDestination(),
+            note: "E2"
+        },
+        uranus: {
+            synth: new Tone.AMSynth({
+                harmonicity: 3,
+                oscillator: { type: "sine" }
+            }).toDestination(),
+            note: "A3"
+        },
+        neptune: {
+            synth: new Tone.MembraneSynth({
+                pitchDecay: 0.05,
+                octaves: 10,
+                oscillator: { type: "sine" }
+            }).toDestination(),
+            note: "D3"
+        }
+    };
+
+    // Audio control functions
+    toggleAudioButton.addEventListener('click', async () => {
+        if (!audioEnabled) {
+            await Tone.start();
+            audioEnabled = true;
+            toggleAudioButton.textContent = 'Disable Sound';
+        } else {
+            audioEnabled = false;
+            toggleAudioButton.textContent = 'Enable Sound';
+            // Stop all sounds
+            Object.values(planetarySounds).forEach(sound => {
+                if (sound.synth.triggerRelease) {
+                    sound.synth.triggerRelease();
+                }
+            });
+        }
+    });
+
+    volumeSlider.addEventListener('input', (e) => {
+        const volume = parseFloat(e.target.value) / 100;
+        Tone.Destination.volume.value = Tone.gainToDb(volume);
+    });
+
     const canvas = document.getElementById('renderCanvas');
     const tooltip = document.getElementById('tooltip');
     const engine = new BABYLON.Engine(canvas, true);
@@ -396,9 +502,37 @@ window.addEventListener('DOMContentLoaded', function() {
                     () => {
                         zoomToPlanet(planet, data.diameter * 3);
                         loadHighResTexture(planetName);
+
+                        // Play planetary sound
+                        if (audioEnabled && planetarySounds[planetName]) {
+                            const sound = planetarySounds[planetName];
+                            if (Array.isArray(sound.note)) {
+                                sound.synth.triggerAttackRelease(sound.note, "4n");
+                            } else {
+                                sound.synth.triggerAttackRelease(sound.note, "2n");
+                            }
+                        }
                     }
                 )
             );
+
+            // Add hover sound effect
+            planet.actionManager.registerAction(
+                new BABYLON.ExecuteCodeAction(
+                    BABYLON.ActionManager.OnPointerOverTrigger,
+                    () => {
+                        if (audioEnabled && planetarySounds[planetName]) {
+                            const sound = planetarySounds[planetName];
+                            if (Array.isArray(sound.note)) {
+                                sound.synth.triggerAttackRelease(sound.note[0], "8n", undefined, 0.3);
+                            } else {
+                                sound.synth.triggerAttackRelease(sound.note, "8n", undefined, 0.3);
+                            }
+                        }
+                    }
+                )
+            );
+
 
             // Create and store orbit
             const orbit = createOrbitLine(data.distance, planetName);
@@ -614,8 +748,7 @@ window.addEventListener('DOMContentLoaded', function() {
                 let tooltipContent = `<strong>${body.name}</strong>`;
                 for (let key in facts) {
                     const label = key.charAt(0).toUpperCase() + key.slice(1)
-                        .replace(/([A-Z])/g, ' $1')
-                        .trim();
+                        .replace(/([A-Z])/g, ' $1`.trim();
                     tooltipContent += `<div><span class="fact-label">${label}:</span> ${facts[key]}</div>`;
                 }
 

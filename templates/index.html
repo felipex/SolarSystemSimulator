@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
 </head>
 <body>
     <canvas id="renderCanvas"></canvas>
@@ -19,6 +20,10 @@
     <div class="constellation-panel" id="constellationPanel">
         <h2 id="constellationTitle"></h2>
         <div class="story" id="constellationStory"></div>
+    </div>
+    <div id="audioControls" class="audio-controls">
+        <button id="toggleAudio" class="audio-button">Enable Sound</button>
+        <input type="range" id="volumeSlider" min="0" max="100" value="50" class="volume-slider">
     </div>
     <script src="{{ url_for('static', filename='js/solar_system.js') }}"></script>
 </body>
