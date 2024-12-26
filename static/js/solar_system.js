@@ -525,47 +525,70 @@ window.addEventListener('DOMContentLoaded', function() {
             constellationMeshes[id] = { stars: starMeshes, lines: lines };
         }
 
-        const numberOfStars = 2000;
-        const backgroundStars = [];
+        // Create multiple star layers for parallax effect
+        const createStarLayer = (numberOfStars, radius, parallaxFactor) => {
+            const stars = [];
+            const starMaterial = new BABYLON.StandardMaterial("starMaterial", scene);
+            starMaterial.emissiveColor = new BABYLON.Color3(1, 1, 1);
+            starMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+            starMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
 
-        const starMaterial = new BABYLON.StandardMaterial("starMaterial", scene);
-        starMaterial.emissiveColor = new BABYLON.Color3(1, 1, 1);
-        starMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
-        starMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
+            for (let i = 0; i < numberOfStars; i++) {
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.random() * Math.PI;
 
-        for (let i = 0; i < numberOfStars; i++) {
-            const radius = 800;
-            const theta = Math.random() * Math.PI * 2;
-            const phi = Math.random() * Math.PI;
+                const star = BABYLON.MeshBuilder.CreateSphere("star" + i, {
+                    diameter: 0.5 + Math.random() * 0.5,
+                    segments: 4
+                }, scene);
 
-            const star = BABYLON.MeshBuilder.CreateSphere("backgroundStar" + i, {
-                diameter: 0.5 + Math.random() * 0.5,
-                segments: 4
-            }, scene);
+                star.position.x = radius * Math.cos(theta) * Math.sin(phi);
+                star.position.y = radius * Math.sin(theta) * Math.sin(phi);
+                star.position.z = radius * Math.cos(phi);
 
-            star.position.x = radius * Math.cos(theta) * Math.sin(phi);
-            star.position.y = radius * Math.sin(theta) * Math.sin(phi);
-            star.position.z = radius * Math.cos(phi);
+                const starMaterialInstance = starMaterial.clone("starMaterial" + i);
+                star.material = starMaterialInstance;
 
-            const starMaterialInstance = starMaterial.clone("starMaterial" + i);
-            star.material = starMaterialInstance;
+                stars.push({
+                    mesh: star,
+                    material: starMaterialInstance,
+                    initialPosition: star.position.clone(),
+                    twinkleSpeed: 0.3 + Math.random() * 0.5,
+                    timeOffset: Math.random() * Math.PI * 2,
+                    baseIntensity: 0.5 + Math.random() * 0.5,
+                    parallaxFactor: parallaxFactor
+                });
+            }
+            return stars;
+        };
 
-            const twinkleSpeed = 0.3 + Math.random() * 0.5;
-            const initialIntensity = 0.5 + Math.random() * 0.5;
+        // Create three layers of stars at different depths
+        const starLayers = [
+            createStarLayer(800, 800, 0.02),  // Far layer, moves slowly
+            createStarLayer(600, 600, 0.05),  // Middle layer
+            createStarLayer(400, 400, 0.08)   // Near layer, moves more
+        ];
 
-            backgroundStars.push({
-                mesh: star,
-                material: starMaterialInstance,
-                twinkleSpeed: twinkleSpeed,
-                timeOffset: Math.random() * Math.PI * 2,
-                baseIntensity: initialIntensity
-            });
-        }
+        // Flatten all star layers into a single array for animation
+        const allStars = starLayers.flat();
 
         let time = 0;
+        let lastCameraPosition = camera.position.clone();
+
         scene.registerBeforeRender(() => {
             time += 0.016;
-            backgroundStars.forEach(star => {
+
+            // Calculate camera movement delta
+            const cameraDelta = camera.position.subtract(lastCameraPosition);
+            lastCameraPosition = camera.position.clone();
+
+            // Update each star's position and twinkle effect
+            allStars.forEach(star => {
+                // Parallax movement based on camera position
+                const parallaxOffset = cameraDelta.scale(star.parallaxFactor);
+                star.mesh.position = star.initialPosition.add(parallaxOffset);
+
+                // Twinkle effect
                 const intensity = star.baseIntensity +
                     Math.sin(time * star.twinkleSpeed + star.timeOffset) * 0.3;
                 star.material.emissiveColor = new BABYLON.Color3(
@@ -613,8 +636,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
                 let tooltipContent = `<strong>${body.name}</strong>`;
                 for (let key in facts) {
-                    const label = key.charAt(0).toUpperCase() + key.slice(1)
-                        .replace(/([A-Z])/g, ' $1`.trim();
+                    const label = key.charAt(0).toUpperCase() + key.slice(1).replace(/([A-Z])/g, ` $1`.trim());
                     tooltipContent += `<div><span class="fact-label">${label}:</span> ${facts[key]}</div>`;
                 }
 
