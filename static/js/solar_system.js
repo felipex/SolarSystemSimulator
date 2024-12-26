@@ -3,7 +3,6 @@ window.addEventListener('DOMContentLoaded', function() {
     const tooltip = document.getElementById('tooltip');
     const engine = new BABYLON.Engine(canvas, true);
 
-    // Scientific facts for celestial bodies
     const celestialBodies = {
         sun: {
             name: "The Sun",
@@ -19,6 +18,34 @@ window.addEventListener('DOMContentLoaded', function() {
                 interesting: "Produces energy through nuclear fusion of hydrogen into helium"
             }
         },
+        mercury: {
+            name: "Mercury",
+            facts: {
+                type: "Terrestrial Planet",
+                diameter: "4,879 kilometers",
+                mass: "3.285 × 10^23 kg",
+                distanceFromSun: "57.9 million kilometers",
+                orbitalPeriod: "88 days",
+                dayLength: "176 Earth days",
+                atmosphere: "Extremely thin (exosphere)",
+                temperature: "-180°C to 430°C",
+                interesting: "Smallest planet in our solar system"
+            }
+        },
+        venus: {
+            name: "Venus",
+            facts: {
+                type: "Terrestrial Planet",
+                diameter: "12,104 kilometers",
+                mass: "4.867 × 10^24 kg",
+                distanceFromSun: "108.2 million kilometers",
+                orbitalPeriod: "225 days",
+                dayLength: "243 Earth days",
+                atmosphere: "96% Carbon Dioxide",
+                temperature: "462°C (average)",
+                interesting: "Hottest planet due to extreme greenhouse effect"
+            }
+        },
         earth: {
             name: "Earth",
             facts: {
@@ -32,6 +59,81 @@ window.addEventListener('DOMContentLoaded', function() {
                 moons: "1 (The Moon)",
                 avgTemp: "15°C (global average)",
                 interesting: "Only known planet with confirmed life"
+            }
+        },
+        mars: {
+            name: "Mars",
+            facts: {
+                type: "Terrestrial Planet",
+                diameter: "6,779 kilometers",
+                mass: "6.39 × 10^23 kg",
+                distanceFromSun: "227.9 million kilometers",
+                orbitalPeriod: "687 days",
+                dayLength: "24 hours, 37 minutes",
+                atmosphere: "95% Carbon Dioxide",
+                moons: "2 (Phobos and Deimos)",
+                temperature: "-63°C (average)",
+                interesting: "Has the largest volcano in the solar system"
+            }
+        },
+        jupiter: {
+            name: "Jupiter",
+            facts: {
+                type: "Gas Giant",
+                diameter: "139,820 kilometers",
+                mass: "1.898 × 10^27 kg",
+                distanceFromSun: "778.5 million kilometers",
+                orbitalPeriod: "11.9 years",
+                dayLength: "9.9 hours",
+                atmosphere: "90% Hydrogen, 10% Helium",
+                moons: "79 known moons",
+                temperature: "-110°C (cloud top)",
+                interesting: "Great Red Spot is a storm lasting over 400 years"
+            }
+        },
+        saturn: {
+            name: "Saturn",
+            facts: {
+                type: "Gas Giant",
+                diameter: "116,460 kilometers",
+                mass: "5.683 × 10^26 kg",
+                distanceFromSun: "1.434 billion kilometers",
+                orbitalPeriod: "29.5 years",
+                dayLength: "10.7 hours",
+                atmosphere: "96% Hydrogen, 3% Helium",
+                moons: "82 known moons",
+                rings: "Main rings span 7,000 to 80,000 km above equator",
+                interesting: "Only planet with prominent, visible rings"
+            }
+        },
+        uranus: {
+            name: "Uranus",
+            facts: {
+                type: "Ice Giant",
+                diameter: "50,724 kilometers",
+                mass: "8.681 × 10^25 kg",
+                distanceFromSun: "2.871 billion kilometers",
+                orbitalPeriod: "84 years",
+                dayLength: "17.2 hours",
+                atmosphere: "83% Hydrogen, 15% Helium, 2% Methane",
+                moons: "27 known moons",
+                temperature: "-224°C (average)",
+                interesting: "Rotates on its side with an axial tilt of 98 degrees"
+            }
+        },
+        neptune: {
+            name: "Neptune",
+            facts: {
+                type: "Ice Giant",
+                diameter: "49,244 kilometers",
+                mass: "1.024 × 10^26 kg",
+                distanceFromSun: "4.495 billion kilometers",
+                orbitalPeriod: "165 years",
+                dayLength: "16.1 hours",
+                atmosphere: "80% Hydrogen, 19% Helium, 1% Methane",
+                moons: "14 known moons",
+                temperature: "-214°C (average)",
+                interesting: "Has the strongest winds in the solar system"
             }
         },
         moon: {
@@ -104,7 +206,6 @@ window.addEventListener('DOMContentLoaded', function() {
         const scene = new BABYLON.Scene(engine);
         scene.clearColor = new BABYLON.Color3(0, 0, 0);
 
-        // Enhanced Camera
         const camera = new BABYLON.ArcRotateCamera(
             "camera",
             0,
@@ -120,7 +221,6 @@ window.addEventListener('DOMContentLoaded', function() {
         camera.upperRadiusLimit = 400;
         camera.wheelPrecision = 50;
 
-        // Enhanced Lighting
         const light = new BABYLON.PointLight(
             "sunLight",
             BABYLON.Vector3.Zero(),
@@ -128,12 +228,34 @@ window.addEventListener('DOMContentLoaded', function() {
         );
         light.intensity = 2;
 
-        // Environment
         const envTexture = new BABYLON.CubeTexture("https://playground.babylonjs.com/textures/space", scene);
         scene.environmentTexture = envTexture;
         scene.createDefaultSkybox(envTexture, true, 1000);
 
-        // Create Sun with enhanced material
+        // Define createOrbitLine function first
+        const createOrbitLine = (radius) => {
+            const points = [];
+            const segments = 128;
+            for (let i = 0; i <= segments; i++) {
+                const angle = (i * Math.PI * 2) / segments;
+                points.push(new BABYLON.Vector3(
+                    radius * Math.cos(angle),
+                    0,
+                    radius * Math.sin(angle)
+                ));
+            }
+            return BABYLON.MeshBuilder.CreateLines("orbit", { points: points }, scene);
+        };
+
+        const createPlanetMaterial = (name, textureUrl) => {
+            const material = new BABYLON.StandardMaterial(name + "Material", scene);
+            material.diffuseTexture = new BABYLON.Texture(textureUrl, scene);
+            material.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+            material.specularPower = 16;
+            return material;
+        };
+
+        // Create Sun
         const sunMaterial = new BABYLON.StandardMaterial("sunMaterial", scene);
         sunMaterial.emissiveTexture = new BABYLON.Texture(
             "https://www.solarsystemscope.com/textures/download/2k_sun.jpg",
@@ -150,22 +272,52 @@ window.addEventListener('DOMContentLoaded', function() {
         );
         sun.material = sunMaterial;
 
-        // Create Earth with enhanced material
-        const earthMaterial = new BABYLON.StandardMaterial("earthMaterial", scene);
-        earthMaterial.diffuseTexture = new BABYLON.Texture(
-            "https://www.solarsystemscope.com/textures/download/2k_earth_daymap.jpg",
-            scene
-        );
-        earthMaterial.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-        earthMaterial.specularPower = 16;
+        // Planet data and creation
+        const planetData = {
+            mercury: { diameter: 3, distance: 30, speed: 0.08, texture: "https://www.solarsystemscope.com/textures/download/2k_mercury.jpg" },
+            venus: { diameter: 4.5, distance: 40, speed: 0.07, texture: "https://www.solarsystemscope.com/textures/download/2k_venus_atmosphere.jpg" },
+            earth: { diameter: 5, distance: 50, speed: 0.06, texture: "https://www.solarsystemscope.com/textures/download/2k_earth_daymap.jpg" },
+            mars: { diameter: 4, distance: 60, speed: 0.05, texture: "https://www.solarsystemscope.com/textures/download/2k_mars.jpg" },
+            jupiter: { diameter: 15, distance: 80, speed: 0.04, texture: "https://www.solarsystemscope.com/textures/download/2k_jupiter.jpg" },
+            saturn: { diameter: 12, distance: 100, speed: 0.03, texture: "https://www.solarsystemscope.com/textures/download/2k_saturn.jpg" },
+            uranus: { diameter: 8, distance: 120, speed: 0.02, texture: "https://www.solarsystemscope.com/textures/download/2k_uranus.jpg" },
+            neptune: { diameter: 7.5, distance: 140, speed: 0.01, texture: "https://www.solarsystemscope.com/textures/download/2k_neptune.jpg" }
+        };
 
-        const earth = BABYLON.MeshBuilder.CreateSphere(
-            "earth",
-            { diameter: 5, segments: 32 },
+        const planets = {};
+        for (let planetName in planetData) {
+            const data = planetData[planetName];
+            const material = createPlanetMaterial(planetName, data.texture);
+
+            const planet = BABYLON.MeshBuilder.CreateSphere(
+                planetName,
+                { diameter: data.diameter, segments: 32 },
+                scene
+            );
+            planet.material = material;
+            planet.position = new BABYLON.Vector3(data.distance, 0, 0);
+            planets[planetName] = planet;
+
+            const orbit = createOrbitLine(data.distance);
+            orbit.color = new BABYLON.Color3(0.4, 0.4, 0.4);
+        }
+
+        // Create Saturn's rings
+        const saturnRings = BABYLON.MeshBuilder.CreateTorus(
+            "saturnRings",
+            { diameter: 20, thickness: 0.3, tessellation: 64 },
             scene
         );
-        earth.material = earthMaterial;
-        earth.position = new BABYLON.Vector3(50, 0, 0);
+        const ringsTexture = new BABYLON.Texture(
+            "https://www.solarsystemscope.com/textures/download/2k_saturn_ring_alpha.png",
+            scene
+        );
+        const ringsMaterial = new BABYLON.StandardMaterial("saturnRingsMaterial", scene);
+        ringsMaterial.diffuseTexture = ringsTexture;
+        ringsMaterial.emissiveColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+        saturnRings.material = ringsMaterial;
+        saturnRings.parent = planets.saturn;
+        saturnRings.rotation.x = Math.PI / 3;
 
         // Create Moon
         const moonMaterial = new BABYLON.StandardMaterial("moonMaterial", scene);
@@ -183,25 +335,11 @@ window.addEventListener('DOMContentLoaded', function() {
         moon.position = new BABYLON.Vector3(55, 0, 0);
 
         // Create orbit lines
-        const createOrbitLine = (radius) => {
-            const points = [];
-            const segments = 128;
-            for (let i = 0; i <= segments; i++) {
-                const angle = (i * Math.PI * 2) / segments;
-                points.push(new BABYLON.Vector3(
-                    radius * Math.cos(angle),
-                    0,
-                    radius * Math.sin(angle)
-                ));
-            }
-            return BABYLON.MeshBuilder.CreateLines("orbit", { points: points }, scene);
-        };
-
         const earthOrbit = createOrbitLine(50);
         earthOrbit.color = new BABYLON.Color3(0.4, 0.4, 0.4);
 
         const moonOrbitHolder = new BABYLON.TransformNode("moonOrbitHolder");
-        moonOrbitHolder.position = earth.position;
+        moonOrbitHolder.position = planets.earth.position;
         const moonOrbit = createOrbitLine(8);
         moonOrbit.parent = moonOrbitHolder;
         moonOrbit.color = new BABYLON.Color3(0.4, 0.4, 0.4);
@@ -209,38 +347,42 @@ window.addEventListener('DOMContentLoaded', function() {
         // Animation
         let angle = 0;
         scene.registerBeforeRender(function() {
-            // Earth orbit around Sun
-            earth.position.x = Math.cos(angle) * 50;
-            earth.position.z = Math.sin(angle) * 50;
-            earth.rotation.y += 0.02;
+            for (let planetName in planets) {
+                const planet = planets[planetName];
+                const data = planetData[planetName];
+                planet.position.x = Math.cos(angle * data.speed) * data.distance;
+                planet.position.z = Math.sin(angle * data.speed) * data.distance;
+                planet.rotation.y += 0.02;
+            }
 
-            // Moon orbit around Earth
-            moonOrbitHolder.position = earth.position;
+            saturnRings.position = planets.saturn.position;
+
+            planets.earth.position.x = Math.cos(angle) * 50;
+            planets.earth.position.z = Math.sin(angle) * 50;
+            planets.earth.rotation.y += 0.02;
+
+            moonOrbitHolder.position = planets.earth.position;
             moonOrbitHolder.rotation.y = angle;
-            moon.position.x = earth.position.x + Math.cos(angle * 4) * 8;
-            moon.position.z = earth.position.z + Math.sin(angle * 4) * 8;
+            moon.position.x = planets.earth.position.x + Math.cos(angle * 4) * 8;
+            moon.position.z = planets.earth.position.z + Math.sin(angle * 4) * 8;
             moon.rotation.y += 0.01;
 
-            // Sun rotation
             sun.rotation.y += 0.005;
 
             angle += 0.02;
         });
 
-        // Enhanced Glow effect for Sun
         const gl = new BABYLON.GlowLayer("glow", scene, {
             mainTextureFixedSize: 512,
             blurKernelSize: 64
         });
         gl.intensity = 0.7;
 
-        // Create constellation meshes with enhanced visuals
         const constellationMeshes = {};
         for (let id in constellations) {
             const constellation = constellations[id];
             const starMeshes = [];
 
-            // Create stars with enhanced appearance
             constellation.stars.forEach((position, index) => {
                 const star = BABYLON.MeshBuilder.CreateSphere(
                     `${id}-star-${index}`,
@@ -255,7 +397,6 @@ window.addEventListener('DOMContentLoaded', function() {
                 star.position = new BABYLON.Vector3(...position);
                 star.visibility = 0;
 
-                // Add glow effect to stars
                 const glowLayer = new BABYLON.GlowLayer(`${id}-glow-${index}`, scene, {
                     mainTextureFixedSize: 256,
                     blurKernelSize: 64
@@ -266,7 +407,6 @@ window.addEventListener('DOMContentLoaded', function() {
                 starMeshes.push(star);
             });
 
-            // Create lines with enhanced appearance
             const lines = [];
             for (let i = 0; i < constellation.stars.length - 1; i++) {
                 const points = [
@@ -286,52 +426,46 @@ window.addEventListener('DOMContentLoaded', function() {
             constellationMeshes[id] = { stars: starMeshes, lines: lines };
         }
 
-        // Add background stars
         const numberOfStars = 2000;
         const backgroundStars = [];
 
-        // Create star material with emissive properties
         const starMaterial = new BABYLON.StandardMaterial("starMaterial", scene);
         starMaterial.emissiveColor = new BABYLON.Color3(1, 1, 1);
         starMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
         starMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
 
-        // Create stars in random positions
         for (let i = 0; i < numberOfStars; i++) {
-            const radius = 800; // Distance from center
+            const radius = 800;
             const theta = Math.random() * Math.PI * 2;
             const phi = Math.random() * Math.PI;
 
             const star = BABYLON.MeshBuilder.CreateSphere("backgroundStar" + i, {
-                diameter: 0.5 + Math.random() * 0.5, // Random size
-                segments: 4 // Low poly for better performance
+                diameter: 0.5 + Math.random() * 0.5,
+                segments: 4
             }, scene);
 
             star.position.x = radius * Math.cos(theta) * Math.sin(phi);
             star.position.y = radius * Math.sin(theta) * Math.sin(phi);
             star.position.z = radius * Math.cos(phi);
 
-            // Create unique material for each star for independent twinkling
             const starMaterialInstance = starMaterial.clone("starMaterial" + i);
             star.material = starMaterialInstance;
 
-            // Add twinkling animation
-            const twinkleSpeed = 0.3 + Math.random() * 0.5; // Random speed
-            const initialIntensity = 0.5 + Math.random() * 0.5; // Random base brightness
+            const twinkleSpeed = 0.3 + Math.random() * 0.5;
+            const initialIntensity = 0.5 + Math.random() * 0.5;
 
             backgroundStars.push({
                 mesh: star,
                 material: starMaterialInstance,
                 twinkleSpeed: twinkleSpeed,
-                timeOffset: Math.random() * Math.PI * 2, // Random phase
+                timeOffset: Math.random() * Math.PI * 2,
                 baseIntensity: initialIntensity
             });
         }
 
-        // Animate twinkling
         let time = 0;
         scene.registerBeforeRender(() => {
-            time += 0.016; // Approximately 60 FPS
+            time += 0.016;
             backgroundStars.forEach(star => {
                 const intensity = star.baseIntensity +
                     Math.sin(time * star.twinkleSpeed + star.timeOffset) * 0.3;
@@ -344,7 +478,6 @@ window.addEventListener('DOMContentLoaded', function() {
         });
 
 
-        // Add constellation interaction
         const constellationList = document.getElementById('constellationList');
         const constellationPanel = document.getElementById('constellationPanel');
         const constellationTitle = document.getElementById('constellationTitle');
@@ -356,17 +489,14 @@ window.addEventListener('DOMContentLoaded', function() {
             if (event.target.tagName === 'BUTTON') {
                 const constellationId = event.target.dataset.constellation;
 
-                // Hide previously shown constellation
                 if (currentConstellation) {
                     constellationMeshes[currentConstellation].stars.forEach(star => star.visibility = 0);
                     constellationMeshes[currentConstellation].lines.forEach(line => line.visibility = 0);
                 }
 
-                // Show selected constellation
                 constellationMeshes[constellationId].stars.forEach(star => star.visibility = 1);
                 constellationMeshes[constellationId].lines.forEach(line => line.visibility = 1);
 
-                // Update panel content
                 constellationTitle.textContent = constellations[constellationId].name;
                 constellationStory.textContent = constellations[constellationId].story;
                 constellationPanel.style.display = 'block';
@@ -375,7 +505,6 @@ window.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Add pointer events for tooltips
         scene.onPointerMove = function(evt) {
             const pickResult = scene.pick(scene.pointerX, scene.pointerY);
 
@@ -386,7 +515,7 @@ window.addEventListener('DOMContentLoaded', function() {
                 let tooltipContent = `<strong>${body.name}</strong>`;
                 for (let key in facts) {
                     const label = key.charAt(0).toUpperCase() + key.slice(1)
-                        .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+                        .replace(/([A-Z])/g, ' $1')
                         .trim();
                     tooltipContent += `<div><span class="fact-label">${label}:</span> ${facts[key]}</div>`;
                 }
@@ -400,11 +529,9 @@ window.addEventListener('DOMContentLoaded', function() {
             }
         };
 
-        // Hide tooltip when pointer leaves canvas
         canvas.addEventListener('mouseleave', function() {
             tooltip.style.display = 'none';
         });
-
 
         return scene;
     };
