@@ -1,6 +1,23 @@
 window.addEventListener('DOMContentLoaded', function() {
     const canvas = document.getElementById('renderCanvas');
+    const tooltip = document.getElementById('tooltip');
     const engine = new BABYLON.Engine(canvas, true);
+
+    // Scientific facts for celestial bodies
+    const celestialBodies = {
+        sun: {
+            name: "The Sun",
+            facts: "Type: Yellow Dwarf Star\nDiameter: 1.39 million km\nSurface Temperature: 5,500°C\nAge: 4.6 billion years",
+        },
+        earth: {
+            name: "Earth",
+            facts: "Type: Terrestrial Planet\nDiameter: 12,742 km\nOrbital Period: 365.25 days\nMoons: 1\nAtmosphere: 78% Nitrogen, 21% Oxygen",
+        },
+        moon: {
+            name: "The Moon",
+            facts: "Type: Natural Satellite\nDiameter: 3,474 km\nOrbital Period: 27.3 days\nDistance from Earth: 384,400 km\nSurface Temperature: -233°C to 123°C",
+        }
+    };
 
     const createScene = function() {
         const scene = new BABYLON.Scene(engine);
@@ -135,6 +152,27 @@ window.addEventListener('DOMContentLoaded', function() {
             blurKernelSize: 64
         });
         gl.intensity = 0.7;
+
+        // Add pointer events for tooltips
+        scene.onPointerMove = function(evt) {
+            const pickResult = scene.pick(scene.pointerX, scene.pointerY);
+
+            if (pickResult.hit && celestialBodies[pickResult.pickedMesh.name]) {
+                const body = celestialBodies[pickResult.pickedMesh.name];
+                tooltip.style.display = 'block';
+                tooltip.style.left = evt.clientX + 10 + 'px';
+                tooltip.style.top = evt.clientY + 10 + 'px';
+                tooltip.innerHTML = `<strong>${body.name}</strong><br>${body.facts.replace(/\n/g, '<br>')}`;
+            } else {
+                tooltip.style.display = 'none';
+            }
+        };
+
+        // Hide tooltip when pointer leaves canvas
+        canvas.addEventListener('mouseleave', function() {
+            tooltip.style.display = 'none';
+        });
+
 
         return scene;
     };
