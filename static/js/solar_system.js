@@ -286,6 +286,64 @@ window.addEventListener('DOMContentLoaded', function() {
             constellationMeshes[id] = { stars: starMeshes, lines: lines };
         }
 
+        // Add background stars
+        const numberOfStars = 2000;
+        const backgroundStars = [];
+
+        // Create star material with emissive properties
+        const starMaterial = new BABYLON.StandardMaterial("starMaterial", scene);
+        starMaterial.emissiveColor = new BABYLON.Color3(1, 1, 1);
+        starMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+        starMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
+
+        // Create stars in random positions
+        for (let i = 0; i < numberOfStars; i++) {
+            const radius = 800; // Distance from center
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.random() * Math.PI;
+
+            const star = BABYLON.MeshBuilder.CreateSphere("backgroundStar" + i, {
+                diameter: 0.5 + Math.random() * 0.5, // Random size
+                segments: 4 // Low poly for better performance
+            }, scene);
+
+            star.position.x = radius * Math.cos(theta) * Math.sin(phi);
+            star.position.y = radius * Math.sin(theta) * Math.sin(phi);
+            star.position.z = radius * Math.cos(phi);
+
+            // Create unique material for each star for independent twinkling
+            const starMaterialInstance = starMaterial.clone("starMaterial" + i);
+            star.material = starMaterialInstance;
+
+            // Add twinkling animation
+            const twinkleSpeed = 0.3 + Math.random() * 0.5; // Random speed
+            const initialIntensity = 0.5 + Math.random() * 0.5; // Random base brightness
+
+            backgroundStars.push({
+                mesh: star,
+                material: starMaterialInstance,
+                twinkleSpeed: twinkleSpeed,
+                timeOffset: Math.random() * Math.PI * 2, // Random phase
+                baseIntensity: initialIntensity
+            });
+        }
+
+        // Animate twinkling
+        let time = 0;
+        scene.registerBeforeRender(() => {
+            time += 0.016; // Approximately 60 FPS
+            backgroundStars.forEach(star => {
+                const intensity = star.baseIntensity +
+                    Math.sin(time * star.twinkleSpeed + star.timeOffset) * 0.3;
+                star.material.emissiveColor = new BABYLON.Color3(
+                    intensity,
+                    intensity,
+                    intensity * 0.9
+                );
+            });
+        });
+
+
         // Add constellation interaction
         const constellationList = document.getElementById('constellationList');
         const constellationPanel = document.getElementById('constellationPanel');
