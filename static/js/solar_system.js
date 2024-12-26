@@ -1,29 +1,28 @@
 window.addEventListener('DOMContentLoaded', function() {
-    // Get the canvas element
     const canvas = document.getElementById('renderCanvas');
     const engine = new BABYLON.Engine(canvas, true);
 
-    // Create the scene
     const createScene = function() {
         const scene = new BABYLON.Scene(engine);
         scene.clearColor = new BABYLON.Color3(0, 0, 0);
 
-        // Camera
+        // Enhanced Camera
         const camera = new BABYLON.ArcRotateCamera(
             "camera",
             0,
             Math.PI / 3,
-            100,
+            150,
             BABYLON.Vector3.Zero(),
             scene
         );
         camera.attachControl(canvas, true);
         camera.minZ = 0.1;
-        camera.maxZ = 1000;
-        camera.lowerRadiusLimit = 50;
-        camera.upperRadiusLimit = 300;
+        camera.maxZ = 2000;
+        camera.lowerRadiusLimit = 80;
+        camera.upperRadiusLimit = 400;
+        camera.wheelPrecision = 50;
 
-        // Lighting
+        // Enhanced Lighting
         const light = new BABYLON.PointLight(
             "sunLight",
             BABYLON.Vector3.Zero(),
@@ -31,57 +30,102 @@ window.addEventListener('DOMContentLoaded', function() {
         );
         light.intensity = 2;
 
-        // Create Sun
+        // Environment
+        const envTexture = new BABYLON.CubeTexture("https://playground.babylonjs.com/textures/space", scene);
+        scene.environmentTexture = envTexture;
+        scene.createDefaultSkybox(envTexture, true, 1000);
+
+        // Create Sun with improved texture
         const sunMaterial = new BABYLON.StandardMaterial("sunMaterial", scene);
-        sunMaterial.emissiveColor = new BABYLON.Color3(1, 0.7, 0);
+        sunMaterial.emissiveTexture = new BABYLON.Texture(
+            "https://raw.githubusercontent.com/BabylonJS/Babylon.js/master/Playground/textures/sun.jpg",
+            scene
+        );
         sunMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
         sunMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
 
         const sun = BABYLON.MeshBuilder.CreateSphere(
             "sun",
-            { diameter: 20 },
+            { diameter: 20, segments: 32 },
             scene
         );
         sun.material = sunMaterial;
 
-        // Create Earth
+        // Create Earth with realistic texture
         const earthMaterial = new BABYLON.StandardMaterial("earthMaterial", scene);
-        earthMaterial.diffuseColor = new BABYLON.Color3(0.2, 0.5, 1);
-        earthMaterial.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+        earthMaterial.diffuseTexture = new BABYLON.Texture(
+            "https://raw.githubusercontent.com/BabylonJS/Babylon.js/master/Playground/textures/earth.jpg",
+            scene
+        );
+        earthMaterial.bumpTexture = new BABYLON.Texture(
+            "https://raw.githubusercontent.com/BabylonJS/Babylon.js/master/Playground/textures/earthbump.jpg",
+            scene
+        );
+        earthMaterial.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
 
         const earth = BABYLON.MeshBuilder.CreateSphere(
             "earth",
-            { diameter: 5 },
+            { diameter: 5, segments: 32 },
             scene
         );
         earth.material = earthMaterial;
         earth.position = new BABYLON.Vector3(50, 0, 0);
 
-        // Create Moon
+        // Add Earth's atmosphere
+        const atmosphereMaterial = new BABYLON.StandardMaterial("atmosphereMaterial", scene);
+        atmosphereMaterial.diffuseColor = new BABYLON.Color3(0.7, 0.7, 1.0);
+        atmosphereMaterial.alpha = 0.1;
+
+        const atmosphere = BABYLON.MeshBuilder.CreateSphere(
+            "atmosphere",
+            { diameter: 5.5, segments: 32 },
+            scene
+        );
+        atmosphere.material = atmosphereMaterial;
+        atmosphere.parent = earth;
+
+        // Create Moon with realistic texture
         const moonMaterial = new BABYLON.StandardMaterial("moonMaterial", scene);
-        moonMaterial.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8);
-        moonMaterial.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+        moonMaterial.diffuseTexture = new BABYLON.Texture(
+            "https://raw.githubusercontent.com/BabylonJS/Babylon.js/master/Playground/textures/moon.jpg",
+            scene
+        );
+        moonMaterial.bumpTexture = new BABYLON.Texture(
+            "https://raw.githubusercontent.com/BabylonJS/Babylon.js/master/Playground/textures/moonbump.jpg",
+            scene
+        );
 
         const moon = BABYLON.MeshBuilder.CreateSphere(
             "moon",
-            { diameter: 1.5 },
+            { diameter: 1.5, segments: 32 },
             scene
         );
         moon.material = moonMaterial;
         moon.position = new BABYLON.Vector3(55, 0, 0);
 
-        // Create starfield background
-        const starCount = 2000;
-        const starsystem = new BABYLON.ParticleSystem("stars", starCount, scene);
-        starsystem.particleTexture = new BABYLON.Texture(
-            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9oFFAABEbrjeo4AAAAZdEVYdENvbW1lbnQAQ3JlYXRlZCB3aXRoIEdJTVBXgQ4XAAAAFklEQVQY02NgYGD4z4AG/jMwMDAzwAQAQ88BHf8P+nAAAAAASUVORK5CYII="
-        );
-        starsystem.emitter = new BABYLON.SphereParticleEmitter(500);
-        starsystem.minEmitPower = 0;
-        starsystem.maxEmitPower = 0;
-        starsystem.minSize = 0.1;
-        starsystem.maxSize = 0.5;
-        starsystem.start();
+        // Create orbit lines
+        const createOrbitLine = (radius) => {
+            const points = [];
+            const segments = 128;
+            for (let i = 0; i <= segments; i++) {
+                const angle = (i * Math.PI * 2) / segments;
+                points.push(new BABYLON.Vector3(
+                    radius * Math.cos(angle),
+                    0,
+                    radius * Math.sin(angle)
+                ));
+            }
+            return BABYLON.MeshBuilder.CreateLines("orbit", { points: points }, scene);
+        };
+
+        const earthOrbit = createOrbitLine(50);
+        earthOrbit.color = new BABYLON.Color3(0.5, 0.5, 0.5);
+
+        const moonOrbitHolder = new BABYLON.TransformNode("moonOrbitHolder");
+        moonOrbitHolder.position = earth.position;
+        const moonOrbit = createOrbitLine(8);
+        moonOrbit.parent = moonOrbitHolder;
+        moonOrbit.color = new BABYLON.Color3(0.4, 0.4, 0.4);
 
         // Animation
         let angle = 0;
@@ -90,6 +134,9 @@ window.addEventListener('DOMContentLoaded', function() {
             earth.position.x = Math.cos(angle) * 50;
             earth.position.z = Math.sin(angle) * 50;
             earth.rotation.y += 0.02;
+
+            moonOrbitHolder.position = earth.position;
+            moonOrbitHolder.rotation.y = angle;
 
             // Moon orbit around Earth
             moon.position.x = earth.position.x + Math.cos(angle * 4) * 8;
@@ -102,20 +149,21 @@ window.addEventListener('DOMContentLoaded', function() {
             angle += 0.005;
         });
 
-        // Glow effect for Sun
-        const gl = new BABYLON.GlowLayer("glow", scene);
-        gl.intensity = 0.5;
+        // Enhanced Glow effect for Sun
+        const gl = new BABYLON.GlowLayer("glow", scene, {
+            mainTextureFixedSize: 512,
+            blurKernelSize: 64
+        });
+        gl.intensity = 0.7;
 
         return scene;
     };
 
-    // Create and run the scene
     const scene = createScene();
     engine.runRenderLoop(function() {
         scene.render();
     });
 
-    // Handle window resize
     window.addEventListener('resize', function() {
         engine.resize();
     });
