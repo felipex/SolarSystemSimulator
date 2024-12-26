@@ -217,9 +217,58 @@ window.addEventListener('DOMContentLoaded', function() {
         camera.attachControl(canvas, true);
         camera.minZ = 0.1;
         camera.maxZ = 2000;
-        camera.lowerRadiusLimit = 80;
+        camera.lowerRadiusLimit = 10; 
         camera.upperRadiusLimit = 400;
         camera.wheelPrecision = 50;
+        camera.pinchPrecision = 50;
+        camera.angularSensibilityX = 2000;
+        camera.angularSensibilityY = 2000;
+
+        const zoomToPlanet = (targetMesh, distance) => {
+            const targetPosition = targetMesh.getAbsolutePosition();
+            BABYLON.Animation.CreateAndStartAnimation(
+                "cameraZoom",
+                camera,
+                "target",
+                30,
+                60,
+                camera.target,
+                targetPosition,
+                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+            );
+            BABYLON.Animation.CreateAndStartAnimation(
+                "cameraPosition",
+                camera,
+                "radius",
+                30,
+                60,
+                camera.radius,
+                distance,
+                BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
+            );
+        };
+
+        const loadHighResTexture = (planetName) => {
+            const highResTextures = {
+                mercury: "https://www.solarsystemscope.com/textures/download/8k_mercury.jpg",
+                venus: "https://www.solarsystemscope.com/textures/download/8k_venus_atmosphere.jpg",
+                earth: "https://www.solarsystemscope.com/textures/download/8k_earth_daymap.jpg",
+                mars: "https://www.solarsystemscope.com/textures/download/8k_mars.jpg",
+                jupiter: "https://www.solarsystemscope.com/textures/download/8k_jupiter.jpg",
+                saturn: "https://www.solarsystemscope.com/textures/download/8k_saturn.jpg",
+                uranus: "https://www.solarsystemscope.com/textures/download/8k_uranus.jpg",
+                neptune: "https://www.solarsystemscope.com/textures/download/8k_neptune.jpg"
+            };
+
+            if (highResTextures[planetName]) {
+                const texture = new BABYLON.Texture(highResTextures[planetName], scene);
+                texture.onLoadObservable.add(() => {
+                    const material = planets[planetName].material;
+                    material.diffuseTexture.dispose();
+                    material.diffuseTexture = texture;
+                });
+            }
+        };
 
         const light = new BABYLON.PointLight(
             "sunLight",
@@ -232,7 +281,6 @@ window.addEventListener('DOMContentLoaded', function() {
         scene.environmentTexture = envTexture;
         scene.createDefaultSkybox(envTexture, true, 1000);
 
-        // Define createOrbitLine function first
         const createOrbitLine = (radius) => {
             const points = [];
             const segments = 128;
@@ -255,7 +303,6 @@ window.addEventListener('DOMContentLoaded', function() {
             return material;
         };
 
-        // Create Sun
         const sunMaterial = new BABYLON.StandardMaterial("sunMaterial", scene);
         sunMaterial.emissiveTexture = new BABYLON.Texture(
             "https://www.solarsystemscope.com/textures/download/2k_sun.jpg",
@@ -272,7 +319,6 @@ window.addEventListener('DOMContentLoaded', function() {
         );
         sun.material = sunMaterial;
 
-        // Planet data and creation
         const planetData = {
             mercury: { diameter: 3, distance: 30, speed: 0.08, texture: "https://www.solarsystemscope.com/textures/download/2k_mercury.jpg" },
             venus: { diameter: 4.5, distance: 40, speed: 0.07, texture: "https://www.solarsystemscope.com/textures/download/2k_venus_atmosphere.jpg" },
@@ -298,11 +344,21 @@ window.addEventListener('DOMContentLoaded', function() {
             planet.position = new BABYLON.Vector3(data.distance, 0, 0);
             planets[planetName] = planet;
 
+            planet.actionManager = new BABYLON.ActionManager(scene);
+            planet.actionManager.registerAction(
+                new BABYLON.ExecuteCodeAction(
+                    BABYLON.ActionManager.OnPickTrigger,
+                    () => {
+                        zoomToPlanet(planet, data.diameter * 3);
+                        loadHighResTexture(planetName);
+                    }
+                )
+            );
+
             const orbit = createOrbitLine(data.distance);
             orbit.color = new BABYLON.Color3(0.4, 0.4, 0.4);
         }
 
-        // Create Saturn's rings
         const saturnRings = BABYLON.MeshBuilder.CreateTorus(
             "saturnRings",
             { diameter: 20, thickness: 0.3, tessellation: 64 },
@@ -319,7 +375,6 @@ window.addEventListener('DOMContentLoaded', function() {
         saturnRings.parent = planets.saturn;
         saturnRings.rotation.x = Math.PI / 3;
 
-        // Create Moon
         const moonMaterial = new BABYLON.StandardMaterial("moonMaterial", scene);
         moonMaterial.diffuseTexture = new BABYLON.Texture(
             "https://www.solarsystemscope.com/textures/download/2k_moon.jpg",
@@ -334,7 +389,6 @@ window.addEventListener('DOMContentLoaded', function() {
         moon.material = moonMaterial;
         moon.position = new BABYLON.Vector3(55, 0, 0);
 
-        // Create orbit lines
         const earthOrbit = createOrbitLine(50);
         earthOrbit.color = new BABYLON.Color3(0.4, 0.4, 0.4);
 
@@ -344,7 +398,6 @@ window.addEventListener('DOMContentLoaded', function() {
         moonOrbit.parent = moonOrbitHolder;
         moonOrbit.color = new BABYLON.Color3(0.4, 0.4, 0.4);
 
-        // Animation
         let angle = 0;
         scene.registerBeforeRender(function() {
             for (let planetName in planets) {
@@ -531,6 +584,15 @@ window.addEventListener('DOMContentLoaded', function() {
 
         canvas.addEventListener('mouseleave', function() {
             tooltip.style.display = 'none';
+        });
+
+        const resetButton = document.createElement('button');
+        resetButton.textContent = 'Reset View';
+        resetButton.className = 'reset-view-button';
+        document.body.appendChild(resetButton);
+
+        resetButton.addEventListener('click', () => {
+            zoomToPlanet(sun, 150);
         });
 
         return scene;

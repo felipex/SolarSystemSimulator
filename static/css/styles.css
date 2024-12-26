@@ -102,3 +102,23 @@ html, body {
     background: rgba(255, 255, 255, 0.1);
     color: #ffd700;
 }
+
+.reset-view-button {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.85);
+    color: #88ccff;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.reset-view-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffd700;
+}
