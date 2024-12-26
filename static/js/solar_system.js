@@ -3,6 +3,207 @@ window.addEventListener('DOMContentLoaded', function() {
     const tooltip = document.getElementById('tooltip');
     const engine = new BABYLON.Engine(canvas, true);
 
+    // Celestial bodies data
+    const celestialBodies = {
+        sun: {
+            name: "The Sun",
+            facts: {
+                type: "Yellow Dwarf Star (G2V)",
+                diameter: "1.39 million kilometers (109× Earth)",
+                mass: "1.989 × 10^30 kg (333,000× Earth)",
+                surfaceTemp: "5,500°C (photosphere)",
+                coreTemp: "15 million°C",
+                age: "4.6 billion years",
+                composition: "73% Hydrogen, 25% Helium, 2% other elements",
+                rotation: "27 days at equator",
+                interesting: "Produces energy through nuclear fusion of hydrogen into helium"
+            }
+        },
+        mercury: {
+            name: "Mercury",
+            facts: {
+                type: "Terrestrial Planet",
+                diameter: "4,879 kilometers",
+                mass: "3.285 × 10^23 kg",
+                distanceFromSun: "57.9 million kilometers",
+                orbitalPeriod: "88 days",
+                dayLength: "176 Earth days",
+                atmosphere: "Extremely thin (exosphere)",
+                temperature: "-180°C to 430°C",
+                interesting: "Smallest planet in our solar system"
+            }
+        },
+        venus: {
+            name: "Venus",
+            facts: {
+                type: "Terrestrial Planet",
+                diameter: "12,104 kilometers",
+                mass: "4.867 × 10^24 kg",
+                distanceFromSun: "108.2 million kilometers",
+                orbitalPeriod: "225 days",
+                dayLength: "243 Earth days",
+                atmosphere: "96% Carbon Dioxide",
+                temperature: "462°C (average)",
+                interesting: "Hottest planet due to extreme greenhouse effect"
+            }
+        },
+        earth: {
+            name: "Earth",
+            facts: {
+                type: "Terrestrial Planet",
+                diameter: "12,742 kilometers",
+                mass: "5.97 × 10^24 kg",
+                distanceFromSun: "149.6 million kilometers (1 AU)",
+                orbitalPeriod: "365.25 days",
+                dayLength: "23 hours, 56 minutes",
+                atmosphere: "78% Nitrogen, 21% Oxygen, 1% other gases",
+                moons: "1 (The Moon)",
+                avgTemp: "15°C (global average)",
+                interesting: "Only known planet with confirmed life"
+            }
+        },
+        mars: {
+            name: "Mars",
+            facts: {
+                type: "Terrestrial Planet",
+                diameter: "6,779 kilometers",
+                mass: "6.39 × 10^23 kg",
+                distanceFromSun: "227.9 million kilometers",
+                orbitalPeriod: "687 days",
+                dayLength: "24 hours, 37 minutes",
+                atmosphere: "95% Carbon Dioxide",
+                moons: "2 (Phobos and Deimos)",
+                temperature: "-63°C (average)",
+                interesting: "Has the largest volcano in the solar system"
+            }
+        },
+        jupiter: {
+            name: "Jupiter",
+            facts: {
+                type: "Gas Giant",
+                diameter: "139,820 kilometers",
+                mass: "1.898 × 10^27 kg",
+                distanceFromSun: "778.5 million kilometers",
+                orbitalPeriod: "11.9 years",
+                dayLength: "9.9 hours",
+                atmosphere: "90% Hydrogen, 10% Helium",
+                moons: "79 known moons",
+                temperature: "-110°C (cloud top)",
+                interesting: "Great Red Spot is a storm lasting over 400 years"
+            }
+        },
+        saturn: {
+            name: "Saturn",
+            facts: {
+                type: "Gas Giant",
+                diameter: "116,460 kilometers",
+                mass: "5.683 × 10^26 kg",
+                distanceFromSun: "1.434 billion kilometers",
+                orbitalPeriod: "29.5 years",
+                dayLength: "10.7 hours",
+                atmosphere: "96% Hydrogen, 3% Helium",
+                moons: "82 known moons",
+                rings: "Main rings span 7,000 to 80,000 km above equator",
+                interesting: "Only planet with prominent, visible rings"
+            }
+        },
+        uranus: {
+            name: "Uranus",
+            facts: {
+                type: "Ice Giant",
+                diameter: "50,724 kilometers",
+                mass: "8.681 × 10^25 kg",
+                distanceFromSun: "2.871 billion kilometers",
+                orbitalPeriod: "84 years",
+                dayLength: "17.2 hours",
+                atmosphere: "83% Hydrogen, 15% Helium, 2% Methane",
+                moons: "27 known moons",
+                temperature: "-224°C (average)",
+                interesting: "Rotates on its side with an axial tilt of 98 degrees"
+            }
+        },
+        neptune: {
+            name: "Neptune",
+            facts: {
+                type: "Ice Giant",
+                diameter: "49,244 kilometers",
+                mass: "1.024 × 10^26 kg",
+                distanceFromSun: "4.495 billion kilometers",
+                orbitalPeriod: "165 years",
+                dayLength: "16.1 hours",
+                atmosphere: "80% Hydrogen, 19% Helium, 1% Methane",
+                moons: "14 known moons",
+                temperature: "-214°C (average)",
+                interesting: "Has the strongest winds in the solar system"
+            }
+        },
+        moon: {
+            name: "The Moon",
+            facts: {
+                type: "Natural Satellite",
+                diameter: "3,474 kilometers",
+                mass: "7.34 × 10^22 kg",
+                distanceFromEarth: "384,400 kilometers (average)",
+                orbitalPeriod: "27.3 days",
+                surfaceTemp: "-233°C to 123°C",
+                atmosphere: "Extremely thin (exosphere)",
+                composition: "Rock and iron-rich core",
+                gravity: "1/6 of Earth's gravity",
+                interesting: "Same face always points toward Earth (tidally locked)"
+            }
+        }
+    };
+
+    // Constellation data
+    const constellations = {
+        'ursa-major': {
+            name: 'Ursa Major (Great Bear)',
+            story: `The Great Bear constellation tells the story of Callisto, a beautiful nymph who caught the eye of Zeus. 
+                   Hera, Zeus's wife, discovered this and in her jealousy transformed Callisto into a bear. 
+                   Zeus later placed Callisto in the stars as Ursa Major to honor her. 
+                   The constellation's distinctive 'Big Dipper' pattern has been used for navigation throughout history.`,
+            stars: [
+                [100, 30, 80],   // Dubhe
+                [95, 32, 85],    // Merak
+                [90, 33, 90],    // Phecda
+                [85, 31, 95],    // Megrez
+                [80, 35, 100],   // Alioth
+                [75, 34, 105],   // Mizar
+                [70, 33, 110]    // Alkaid
+            ]
+        },
+        'orion': {
+            name: 'Orion (The Hunter)',
+            story: `Orion was a giant hunter in Greek mythology, known for his skill and beauty. 
+                   According to legend, he was killed by a scorpion sent by Gaia (or in some versions, by Artemis). 
+                   Zeus placed him among the stars where he eternally hunts across the night sky. 
+                   The distinctive three stars of Orion's Belt make this one of the most recognizable constellations.`,
+            stars: [
+                [120, 20, -30],  // Betelgeuse
+                [125, 15, -25],  // Bellatrix
+                [123, 10, -20],  // Alnitak
+                [123, 10, -15],  // Alnilam
+                [123, 10, -10],  // Mintaka
+                [125, 5, -5],    // Saiph
+                [120, 5, -35]    // Rigel
+            ]
+        },
+        'cassiopeia': {
+            name: 'Cassiopeia (The Queen)',
+            story: `Cassiopeia was a vain queen in Greek mythology who boasted that she and her daughter Andromeda were more beautiful than the Nereids. 
+                   This angered Poseidon, who sent a sea monster to ravage the coast of her kingdom. 
+                   As punishment for her pride, she was placed in the stars on a throne, forced to circle the celestial pole forever. 
+                   The constellation forms a distinctive 'W' or 'M' shape in the night sky.`,
+            stars: [
+                [-90, 40, 70],   // Shedar
+                [-85, 45, 65],   // Caph
+                [-80, 35, 60],   // Gamma Cas
+                [-75, 30, 55],   // Ruchbah
+                [-70, 25, 50]    // Segin
+            ]
+        }
+    };
+
     // Initialize UI elements
     const rotationControls = document.getElementById('rotationControls');
     const objectInfoPanel = document.getElementById('objectInfoPanel');
@@ -356,31 +557,6 @@ window.addEventListener('DOMContentLoaded', function() {
             )
         );
 
-        // Animation
-        let angle = 0;
-        scene.registerBeforeRender(function() {
-            for (let planetName in planets) {
-                const planet = planets[planetName];
-                const data = planetData[planetName];
-                planet.position.x = Math.cos(angle * data.speed) * data.distance;
-                planet.position.z = Math.sin(angle * data.speed) * data.distance;
-                planet.rotation.y += 0.02;
-            }
-
-            //Earth and moon animation
-            planets.earth.position.x = Math.cos(angle) * 50;
-            planets.earth.position.z = Math.sin(angle) * 50;
-            planets.earth.rotation.y += 0.02;
-
-            moon.position.x = planets.earth.position.x + Math.cos(angle * 4) * 8;
-            moon.position.z = planets.earth.position.z + Math.sin(angle * 4) * 8;
-            moon.rotation.y += 0.01;
-
-            sun.rotation.y += 0.005;
-
-            angle += 0.02;
-        });
-
         // Add Saturn's rings
         const saturnRings = BABYLON.MeshBuilder.CreateTorus(
             "saturnRings",
@@ -423,7 +599,7 @@ window.addEventListener('DOMContentLoaded', function() {
                 starMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
                 star.material = starMaterial;
                 star.position = new BABYLON.Vector3(...position);
-                star.visibility = 1; // Make constellations visible
+                star.visibility = 0; // Make constellations initially invisible
 
                 const glowLayer = new BABYLON.GlowLayer(`${id}-glow-${index}`, scene, {
                     mainTextureFixedSize: 256,
@@ -447,7 +623,7 @@ window.addEventListener('DOMContentLoaded', function() {
                 }, scene);
                 line.color = new BABYLON.Color3(0.5, 0.7, 1);
                 line.alpha = 0.6;
-                line.visibility = 1; // Make constellation lines visible
+                line.visibility = 0; // Make constellation lines initially invisible
                 lines.push(line);
             }
 
@@ -529,6 +705,31 @@ window.addEventListener('DOMContentLoaded', function() {
         });
 
 
+        // Animation
+        let angle = 0;
+        scene.registerBeforeRender(function() {
+            for (let planetName in planets) {
+                const planet = planets[planetName];
+                const data = planetData[planetName];
+                planet.position.x = Math.cos(angle * data.speed) * data.distance;
+                planet.position.z = Math.sin(angle * data.speed) * data.distance;
+                planet.rotation.y += 0.02;
+            }
+
+            //Earth and moon animation
+            planets.earth.position.x = Math.cos(angle) * 50;
+            planets.earth.position.z = Math.sin(angle) * 50;
+            planets.earth.rotation.y += 0.02;
+
+            moon.position.x = planets.earth.position.x + Math.cos(angle * 4) * 8;
+            moon.position.z = planets.earth.position.z + Math.sin(angle * 4) * 8;
+            moon.rotation.y += 0.01;
+
+            sun.rotation.y += 0.005;
+
+            angle += 0.02;
+        });
+
         const constellationList = document.getElementById('constellationList');
         const constellationPanel = document.getElementById('constellationPanel');
         const constellationTitle = document.getElementById('constellationTitle');
@@ -556,272 +757,7 @@ window.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        const celestialBodies = {
-            sun: {
-                name: "The Sun",
-                facts: {
-                    type: "Yellow Dwarf Star (G2V)",
-                    diameter: "1.39 million kilometers (109× Earth)",
-                    mass: "1.989 × 10^30 kg (333,000× Earth)",
-                    surfaceTemp: "5,500°C (photosphere)",
-                    coreTemp: "15 million°C",
-                    age: "4.6 billion years",
-                    composition: "73% Hydrogen, 25% Helium, 2% other elements",
-                    rotation: "27 days at equator",
-                    interesting: "Produces energy through nuclear fusion of hydrogen into helium"
-                }
-            },
-            mercury: {
-                name: "Mercury",
-                facts: {
-                    type: "Terrestrial Planet",
-                    diameter: "4,879 kilometers",
-                    mass: "3.285 × 10^23 kg",
-                    distanceFromSun: "57.9 million kilometers",
-                    orbitalPeriod: "88 days",
-                    dayLength: "176 Earth days",
-                    atmosphere: "Extremely thin (exosphere)",
-                    temperature: "-180°C to 430°C",
-                    interesting: "Smallest planet in our solar system"
-                }
-            },
-            venus: {
-                name: "Venus",
-                facts: {
-                    type: "Terrestrial Planet",
-                    diameter: "12,104 kilometers",
-                    mass: "4.867 × 10^24 kg",
-                    distanceFromSun: "108.2 million kilometers",
-                    orbitalPeriod: "225 days",
-                    dayLength: "243 Earth days",
-                    atmosphere: "96% Carbon Dioxide",
-                    temperature: "462°C (average)",
-                    interesting: "Hottest planet due to extreme greenhouse effect"
-                }
-            },
-            earth: {
-                name: "Earth",
-                facts: {
-                    type: "Terrestrial Planet",
-                    diameter: "12,742 kilometers",
-                    mass: "5.97 × 10^24 kg",
-                    distanceFromSun: "149.6 million kilometers (1 AU)",
-                    orbitalPeriod: "365.25 days",
-                    dayLength: "23 hours, 56 minutes",
-                    atmosphere: "78% Nitrogen, 21% Oxygen, 1% other gases",
-                    moons: "1 (The Moon)",
-                    avgTemp: "15°C (global average)",
-                    interesting: "Only known planet with confirmed life"
-                }
-            },
-            mars: {
-                name: "Mars",
-                facts: {
-                    type: "Terrestrial Planet",
-                    diameter: "6,779 kilometers",
-                    mass: "6.39 × 10^23 kg",
-                    distanceFromSun: "227.9 million kilometers",
-                    orbitalPeriod: "687 days",
-                    dayLength: "24 hours, 37 minutes",
-                    atmosphere: "95% Carbon Dioxide",
-                    moons: "2 (Phobos and Deimos)",
-                    temperature: "-63°C (average)",
-                    interesting: "Has the largest volcano in the solar system"
-                }
-            },
-            jupiter: {
-                name: "Jupiter",
-                facts: {
-                    type: "Gas Giant",
-                    diameter: "139,820 kilometers",
-                    mass: "1.898 × 10^27 kg",
-                    distanceFromSun: "778.5 million kilometers",
-                    orbitalPeriod: "11.9 years",
-                    dayLength: "9.9 hours",
-                    atmosphere: "90% Hydrogen, 10% Helium",
-                    moons: "79 known moons",
-                    temperature: "-110°C (cloud top)",
-                    interesting: "Great Red Spot is a storm lasting over 400 years"
-                }
-            },
-            saturn: {
-                name: "Saturn",
-                facts: {
-                    type: "Gas Giant",
-                    diameter: "116,460 kilometers",
-                    mass: "5.683 × 10^26 kg",
-                    distanceFromSun: "1.434 billion kilometers",
-                    orbitalPeriod: "29.5 years",
-                    dayLength: "10.7 hours",
-                    atmosphere: "96% Hydrogen, 3% Helium",
-                    moons: "82 known moons",
-                    rings: "Main rings span 7,000 to 80,000 km above equator",
-                    interesting: "Only planet with prominent, visible rings"
-                }
-            },
-            uranus: {
-                name: "Uranus",
-                facts: {
-                    type: "Ice Giant",
-                    diameter: "50,724 kilometers",
-                    mass: "8.681 × 10^25 kg",
-                    distanceFromSun: "2.871 billion kilometers",
-                    orbitalPeriod: "84 years",
-                    dayLength: "17.2 hours",
-                    atmosphere: "83% Hydrogen, 15% Helium, 2% Methane",
-                    moons: "27 known moons",
-                    temperature: "-224°C (average)",
-                    interesting: "Rotates on its side with an axial tilt of 98 degrees"
-                }
-            },
-            neptune: {
-                name: "Neptune",
-                facts: {
-                    type: "Ice Giant",
-                    diameter: "49,244 kilometers",
-                    mass: "1.024 × 10^26 kg",
-                    distanceFromSun: "4.495 billion kilometers",
-                    orbitalPeriod: "165 years",
-                    dayLength: "16.1 hours",
-                    atmosphere: "80% Hydrogen, 19% Helium, 1% Methane",
-                    moons: "14 known moons",
-                    temperature: "-214°C (average)",
-                    interesting: "Has the strongest winds in the solar system"
-                }
-            },
-            moon: {
-                name: "The Moon",
-                facts: {
-                    type: "Natural Satellite",
-                    diameter: "3,474 kilometers",
-                    mass: "7.34 × 10^22 kg",
-                    distanceFromEarth: "384,400 kilometers (average)",
-                    orbitalPeriod: "27.3 days",
-                    surfaceTemp: "-233°C to 123°C",
-                    atmosphere: "Extremely thin (exosphere)",
-                    composition: "Rock and iron-rich core",
-                    gravity: "1/6 of Earth's gravity",
-                    interesting: "Same face always points toward Earth (tidally locked)"
-                }
-            }
-        };
-
-        const constellations = {
-            'ursa-major': {
-                name: 'Ursa Major (Great Bear)',
-                story: `The Great Bear constellation tells the story of Callisto, a beautiful nymph who caught the eye of Zeus. 
-                   Hera, Zeus's wife, discovered this and in her jealousy transformed Callisto into a bear. 
-                   Zeus later placed Callisto in the stars as Ursa Major to honor her. 
-                   The constellation's distinctive 'Big Dipper' pattern has been used for navigation throughout history.`,
-                stars: [
-                    [100, 30, 80],   // Dubhe
-                    [95, 32, 85],    // Merak
-                    [90, 33, 90],    // Phecda
-                    [85, 31, 95],    // Megrez
-                    [80, 35, 100],   // Alioth
-                    [75, 34, 105],   // Mizar
-                    [70, 33, 110]    // Alkaid
-                ]
-            },
-            'orion': {
-                name: 'Orion (The Hunter)',
-                story: `Orion was a giant hunter in Greek mythology, known for his skill and beauty. 
-                   According to legend, he was killed by a scorpion sent by Gaia (or in some versions, by Artemis). 
-                   Zeus placed him among the stars where he eternally hunts across the night sky. 
-                   The distinctive three stars of Orion's Belt make this one of the most recognizable constellations.`,
-                stars: [
-                    [120, 20, -30],  // Betelgeuse
-                    [125, 15, -25],  // Bellatrix
-                    [123, 10, -20],  // Alnitak
-                    [123, 10, -15],  // Alnilam
-                    [123, 10, -10],  // Mintaka
-                    [125, 5, -5],    // Saiph
-                    [120, 5, -35]    // Rigel
-                ]
-            },
-            'cassiopeia': {
-                name: 'Cassiopeia (The Queen)',
-                story: `Cassiopeia was a vain queen in Greek mythology who boasted that she and her daughter Andromeda were more beautiful than the Nereids. 
-                   This angered Poseidon, who sent a sea monster to ravage the coast of her kingdom. 
-                   As punishment for her pride, she was placed in the stars on a throne, forced to circle the celestial pole forever. 
-                   The constellation forms a distinctive 'W' or 'M' shape in the night sky.`,
-                stars: [
-                    [-90, 40, 70],   // Shedar
-                    [-85, 45, 65],   // Caph
-                    [-80, 35, 60],   // Gamma Cas
-                    [-75, 30, 55],   // Ruchbah
-                    [-70, 25, 50]    // Segin
-                ]
-            }
-        };
-
-        let currentObjectIndex = -1;
-        const objectInfoPanel = document.getElementById('objectInfoPanel');
-        const objectTitle = document.getElementById('objectTitle');
-        const objectBasicInfo = document.getElementById('objectBasicInfo');
-        const objectDetailedInfo = document.getElementById('objectDetailedInfo');
-        const closeInfoPanel = document.getElementById('closeInfoPanel');
-        const prevObjectBtn = document.getElementById('prevObject');
-        const nextObjectBtn = document.getElementById('nextObject');
-
-        const celestialObjectsArray = ['sun', ...Object.keys(planetData), 'moon'];
-
-        function updateInfoPanel(objectName) {
-            const body = celestialBodies[objectName];
-            if (!body) return;
-
-            currentObjectIndex = celestialObjectsArray.indexOf(objectName);
-            objectTitle.textContent = body.name;
-
-            let basicInfoHTML = '';
-            let detailedInfoHTML = '';
-
-            Object.entries(body.facts).forEach(([key, value], index) => {
-                const label = key.charAt(0).toUpperCase() + 
-                             key.slice(1).replace(/([A-Z])/g, ' $1').trim();
-
-                if (index < 3) {
-                    basicInfoHTML += `
-                        <div class="info-row">
-                            <span class="info-label">${label}:</span>
-                            <span class="info-value">${value}</span>
-                        </div>`;
-                } else {
-                    detailedInfoHTML += `
-                        <div class="info-row">
-                            <span class="info-label">${label}:</span>
-                            <span class="info-value">${value}</span>
-                        </div>`;
-                }
-            });
-
-            objectBasicInfo.innerHTML = basicInfoHTML;
-            objectDetailedInfo.innerHTML = detailedInfoHTML;
-            objectInfoPanel.style.display = 'block';
-
-            // Update navigation buttons
-            prevObjectBtn.disabled = currentObjectIndex <= 0;
-            nextObjectBtn.disabled = currentObjectIndex >= celestialObjectsArray.length - 1;
-        }
-
-        closeInfoPanel.addEventListener('click', () => {
-            objectInfoPanel.style.display = 'none';
-            rotationControls.style.display = 'none';
-            selectedObject = null;
-        });
-
-        prevObjectBtn.addEventListener('click', () => {
-            if (currentObjectIndex > 0) {
-                updateInfoPanel(celestialObjectsArray[currentObjectIndex - 1]);
-            }
-        });
-
-        nextObjectBtn.addEventListener('click', () => {
-            if (currentObjectIndex < celestialObjectsArray.length - 1) {
-                updateInfoPanel(celestialObjectsArray[currentObjectIndex + 1]);
-            }
-        });
-
+        // Tooltip functionality
         scene.onPointerMove = function(evt) {
             const pickResult = scene.pick(scene.pointerX, scene.pointerY);
 
@@ -866,154 +802,5 @@ window.addEventListener('DOMContentLoaded', function() {
         engine.resize();
     });
 
-    // Celestial bodies data
-    const celestialBodies = {
-        sun: {
-            name: "The Sun",
-            facts: {
-                type: "Yellow Dwarf Star (G2V)",
-                diameter: "1.39 million kilometers (109× Earth)",
-                mass: "1.989 × 10^30 kg (333,000× Earth)",
-                surfaceTemp: "5,500°C (photosphere)",
-                coreTemp: "15 million°C",
-                age: "4.6 billion years",
-                composition: "73% Hydrogen, 25% Helium, 2% other elements",
-                rotation: "27 days at equator",
-                interesting: "Produces energy through nuclear fusion of hydrogen into helium"
-            }
-        },
-        mercury: {
-            name: "Mercury",
-            facts: {
-                type: "Terrestrial Planet",
-                diameter: "4,879 kilometers",
-                mass: "3.285 × 10^23 kg",
-                distanceFromSun: "57.9 million kilometers",
-                orbitalPeriod: "88 days",
-                dayLength: "176 Earth days",
-                atmosphere: "Extremely thin (exosphere)",
-                temperature: "-180°C to 430°C",
-                interesting: "Smallest planet in our solar system"
-            }
-        },
-        venus: {
-            name: "Venus",
-            facts: {
-                type: "Terrestrial Planet",
-                diameter: "12,104 kilometers",
-                mass: "4.867 × 10^24 kg",
-                distanceFromSun: "108.2 million kilometers",
-                orbitalPeriod: "225 days",
-                dayLength: "243 Earth days",
-                atmosphere: "96% Carbon Dioxide",
-                temperature: "462°C (average)",
-                interesting: "Hottest planet due to extreme greenhouse effect"
-            }
-        },
-        earth: {
-            name: "Earth",
-            facts: {
-                type: "Terrestrial Planet",
-                diameter: "12,742 kilometers",
-                mass: "5.97 × 10^24 kg",
-                distanceFromSun: "149.6 million kilometers (1 AU)",
-                orbitalPeriod: "365.25 days",
-                dayLength: "23 hours, 56 minutes",
-                atmosphere: "78% Nitrogen, 21% Oxygen, 1% other gases",
-                moons: "1 (The Moon)",
-                avgTemp: "15°C (global average)",
-                interesting: "Only known planet with confirmed life"
-            }
-        },
-        mars: {
-            name: "Mars",
-            facts: {
-                type: "Terrestrial Planet",
-                diameter: "6,779 kilometers",
-                mass: "6.39 × 10^23 kg",
-                distanceFromSun: "227.9 million kilometers",
-                orbitalPeriod: "687 days",
-                dayLength: "24 hours, 37 minutes",
-                atmosphere: "95% Carbon Dioxide",
-                moons: "2 (Phobos and Deimos)",
-                temperature: "-63°C (average)",
-                interesting: "Has the largest volcano in the solar system"
-            }
-        },
-        jupiter: {
-            name: "Jupiter",
-            facts: {
-                type: "Gas Giant",
-                diameter: "139,820 kilometers",
-                mass: "1.898 × 10^27 kg",
-                distanceFromSun: "778.5 million kilometers",
-                orbitalPeriod: "11.9 years",
-                dayLength: "9.9 hours",
-                atmosphere: "90% Hydrogen, 10% Helium",
-                moons: "79 known moons",
-                temperature: "-110°C (cloud top)",
-                interesting: "Great Red Spot is a storm lasting over 400 years"
-            }
-        },
-        saturn: {
-            name: "Saturn",
-            facts: {
-                type: "Gas Giant",
-                diameter: "116,460 kilometers",
-                mass: "5.683 × 10^26 kg",
-                distanceFromSun: "1.434 billion kilometers",
-                orbitalPeriod: "29.5 years",
-                dayLength: "10.7 hours",
-                atmosphere: "96% Hydrogen, 3% Helium",
-                moons: "82 known moons",
-                rings: "Main rings span 7,000 to 80,000 km above equator",
-                interesting: "Only planet with prominent, visible rings"
-            }
-        },
-        uranus: {
-            name: "Uranus",
-            facts: {
-                type: "Ice Giant",
-                diameter: "50,724 kilometers",
-                mass: "8.681 × 10^25 kg",
-                distanceFromSun: "2.871 billion kilometers",
-                orbitalPeriod: "84 years",
-                dayLength: "17.2 hours",
-                atmosphere: "83% Hydrogen, 15% Helium, 2% Methane",
-                moons: "27 known moons",
-                temperature: "-224°C (average)",
-                interesting: "Rotates on its side with an axial tilt of 98 degrees"
-            }
-        },
-        neptune: {
-            name: "Neptune",
-            facts: {
-                type: "Ice Giant",
-                diameter: "49,244 kilometers",
-                mass: "1.024 × 10^26 kg",
-                distanceFromSun: "4.495 billion kilometers",
-                orbitalPeriod: "165 years",
-                dayLength: "16.1 hours",
-                atmosphere: "80% Hydrogen, 19% Helium, 1% Methane",
-                moons: "14 known moons",
-                temperature: "-214°C (average)",
-                interesting: "Has the strongest winds in the solar system"
-            }
-        },
-        moon: {
-            name: "The Moon",
-            facts: {
-                type: "Natural Satellite",
-                diameter: "3,474 kilometers",
-                mass: "7.34 × 10^22 kg",
-                distanceFromEarth: "384,400 kilometers (average)",
-                orbitalPeriod: "27.3 days",
-                surfaceTemp: "-233°C to 123°C",
-                atmosphere: "Extremely thin (exosphere)",
-                composition: "Rock and iron-rich core",
-                gravity: "1/6 of Earth's gravity",
-                interesting: "Same face always points toward Earth (tidally locked)"
-            }
-        }
-    };
+    const celestialObjectsArray = ['sun', ...Object.keys(planetData), 'moon'];
 });
