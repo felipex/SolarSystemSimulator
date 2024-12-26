@@ -395,6 +395,7 @@ window.addEventListener('DOMContentLoaded', function() {
                     () => {
                         zoomToPlanet(planet, data.diameter * 3);
                         loadHighResTexture(planetName);
+                        updateInfoPanel(planetName); // Added updateInfoPanel call
                     }
                 )
             );
@@ -626,6 +627,111 @@ window.addEventListener('DOMContentLoaded', function() {
                 currentConstellation = constellationId;
             }
         });
+
+        let currentObjectIndex = -1;
+        const objectInfoPanel = document.getElementById('objectInfoPanel');
+        const objectTitle = document.getElementById('objectTitle');
+        const objectBasicInfo = document.getElementById('objectBasicInfo');
+        const objectDetailedInfo = document.getElementById('objectDetailedInfo');
+        const closeInfoPanel = document.getElementById('closeInfoPanel');
+        const prevObjectBtn = document.getElementById('prevObject');
+        const nextObjectBtn = document.getElementById('nextObject');
+
+        const celestialObjectsArray = ['sun', ...Object.keys(planetData), 'moon'];
+
+        function updateInfoPanel(objectName) {
+            const body = celestialBodies[objectName];
+            if (!body) return;
+
+            currentObjectIndex = celestialObjectsArray.indexOf(objectName);
+            objectTitle.textContent = body.name;
+
+            let basicInfoHTML = '';
+            let detailedInfoHTML = '';
+
+            Object.entries(body.facts).forEach(([key, value], index) => {
+                const label = key.charAt(0).toUpperCase() + 
+                             key.slice(1).replace(/([A-Z])/g, ' $1').trim();
+
+                if (index < 3) {
+                    basicInfoHTML += `
+                        <div class="info-row">
+                            <span class="info-label">${label}:</span>
+                            <span class="info-value">${value}</span>
+                        </div>`;
+                } else {
+                    detailedInfoHTML += `
+                        <div class="info-row">
+                            <span class="info-label">${label}:</span>
+                            <span class="info-value">${value}</span>
+                        </div>`;
+                }
+            });
+
+            objectBasicInfo.innerHTML = basicInfoHTML;
+            objectDetailedInfo.innerHTML = detailedInfoHTML;
+            objectInfoPanel.style.display = 'block';
+
+            // Update navigation buttons
+            prevObjectBtn.disabled = currentObjectIndex <= 0;
+            nextObjectBtn.disabled = currentObjectIndex >= celestialObjectsArray.length - 1;
+        }
+
+        closeInfoPanel.addEventListener('click', () => {
+            objectInfoPanel.style.display = 'none';
+        });
+
+        prevObjectBtn.addEventListener('click', () => {
+            if (currentObjectIndex > 0) {
+                updateInfoPanel(celestialObjectsArray[currentObjectIndex - 1]);
+            }
+        });
+
+        nextObjectBtn.addEventListener('click', () => {
+            if (currentObjectIndex < celestialObjectsArray.length - 1) {
+                updateInfoPanel(celestialObjectsArray[currentObjectIndex + 1]);
+            }
+        });
+
+        // Update the planet click handler
+        for (let planetName in planets) {
+            const planet = planets[planetName];
+            const data = planetData[planetName];
+            planet.actionManager.registerAction(
+                new BABYLON.ExecuteCodeAction(
+                    BABYLON.ActionManager.OnPickTrigger,
+                    () => {
+                        zoomToPlanet(planet, data.diameter * 3);
+                        loadHighResTexture(planetName);
+                        updateInfoPanel(planetName);
+                    }
+                )
+            );
+        }
+
+        // Add click handler for the sun
+        sun.actionManager = new BABYLON.ActionManager(scene);
+        sun.actionManager.registerAction(
+            new BABYLON.ExecuteCodeAction(
+                BABYLON.ActionManager.OnPickTrigger,
+                () => {
+                    zoomToPlanet(sun, 40);
+                    updateInfoPanel('sun');
+                }
+            )
+        );
+
+        // Add click handler for the moon
+        moon.actionManager = new BABYLON.ActionManager(scene);
+        moon.actionManager.registerAction(
+            new BABYLON.ExecuteCodeAction(
+                BABYLON.ActionManager.OnPickTrigger,
+                () => {
+                    zoomToPlanet(moon, 5);
+                    updateInfoPanel('moon');
+                }
+            )
+        );
 
         scene.onPointerMove = function(evt) {
             const pickResult = scene.pick(scene.pointerX, scene.pointerY);

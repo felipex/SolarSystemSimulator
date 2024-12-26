@@ -20,6 +20,18 @@
         <h2 id="constellationTitle"></h2>
         <div class="story" id="constellationStory"></div>
     </div>
+    <div id="objectInfoPanel" class="object-info-panel">
+        <button class="close-button" id="closeInfoPanel">×</button>
+        <h2 id="objectTitle"></h2>
+        <div class="info-content">
+            <div id="objectBasicInfo"></div>
+            <div id="objectDetailedInfo"></div>
+        </div>
+        <div class="info-navigation">
+            <button id="prevObject" class="nav-button">← Previous</button>
+            <button id="nextObject" class="nav-button">Next →</button>
+        </div>
+    </div>
     <script src="{{ url_for('static', filename='js/solar_system.js') }}"></script>
 </body>
 </html>
