@@ -259,3 +259,45 @@ html, body {
     text-align: right;
     color: #ffffff;
 }
+
+/* Add these styles after the existing content */
+.rotation-controls {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.85);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    z-index: 1000;
+}
+
+.rotate-button {
+    background: rgba(0, 0, 0, 0.5);
+    color: #88ccff;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+.rotate-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffd700;
+}
+
+.rotate-button.reset {
+    grid-column: span 2;
+    margin-top: 8px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.rotation-controls {
+    display: none;
+}
