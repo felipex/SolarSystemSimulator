@@ -223,7 +223,7 @@ window.addEventListener('DOMContentLoaded', function() {
             // Sun rotation
             sun.rotation.y += 0.005;
 
-            angle += 0.005;
+            angle += 0.02;
         });
 
         // Enhanced Glow effect for Sun
