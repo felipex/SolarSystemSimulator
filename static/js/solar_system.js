@@ -35,12 +35,13 @@ window.addEventListener('DOMContentLoaded', function() {
         scene.environmentTexture = envTexture;
         scene.createDefaultSkybox(envTexture, true, 1000);
 
-        // Create Sun with improved texture
+        // Create Sun with enhanced material
         const sunMaterial = new BABYLON.StandardMaterial("sunMaterial", scene);
         sunMaterial.emissiveTexture = new BABYLON.Texture(
-            "https://www.babylonjs-playground.com/textures/sun.jpg",
+            "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/frames/730x730_1x1_30p/sun/sun.jpg",
             scene
         );
+        sunMaterial.emissiveColor = new BABYLON.Color3(1, 0.8, 0.3);
         sunMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
         sunMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
 
@@ -51,18 +52,19 @@ window.addEventListener('DOMContentLoaded', function() {
         );
         sun.material = sunMaterial;
 
-        // Create Earth with realistic texture
+        // Create Earth with enhanced material
         const earthMaterial = new BABYLON.StandardMaterial("earthMaterial", scene);
         earthMaterial.diffuseTexture = new BABYLON.Texture(
-            "https://www.babylonjs-playground.com/textures/earth.jpg",
+            "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/frames/730x730_1x1_30p/earth/earth.jpg",
             scene
         );
         earthMaterial.bumpTexture = new BABYLON.Texture(
-            "https://www.babylonjs-playground.com/textures/earthbump.jpg",
+            "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/frames/730x730_1x1_30p/earth/earthbump.jpg",
             scene
         );
-        earthMaterial.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+        earthMaterial.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
         earthMaterial.bumpTexture.level = 1.0;
+        earthMaterial.specularPower = 16;
 
         const earth = BABYLON.MeshBuilder.CreateSphere(
             "earth",
@@ -72,10 +74,10 @@ window.addEventListener('DOMContentLoaded', function() {
         earth.material = earthMaterial;
         earth.position = new BABYLON.Vector3(50, 0, 0);
 
-        // Add Earth's atmosphere
+        // Add Earth's atmosphere with improved effect
         const atmosphereMaterial = new BABYLON.StandardMaterial("atmosphereMaterial", scene);
-        atmosphereMaterial.diffuseColor = new BABYLON.Color3(0.7, 0.7, 1.0);
-        atmosphereMaterial.alpha = 0.1;
+        atmosphereMaterial.emissiveColor = new BABYLON.Color3(0.3, 0.5, 1.0);
+        atmosphereMaterial.alpha = 0.2;
 
         const atmosphere = BABYLON.MeshBuilder.CreateSphere(
             "atmosphere",
@@ -85,16 +87,17 @@ window.addEventListener('DOMContentLoaded', function() {
         atmosphere.material = atmosphereMaterial;
         atmosphere.parent = earth;
 
-        // Create Moon with realistic texture
+        // Create Moon with enhanced material
         const moonMaterial = new BABYLON.StandardMaterial("moonMaterial", scene);
         moonMaterial.diffuseTexture = new BABYLON.Texture(
-            "https://www.babylonjs-playground.com/textures/moon.jpg",
+            "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/frames/730x730_1x1_30p/moon/moon.jpg",
             scene
         );
         moonMaterial.bumpTexture = new BABYLON.Texture(
-            "https://www.babylonjs-playground.com/textures/moonbump.jpg",
+            "https://svs.gsfc.nasa.gov/vis/a000000/a004700/a004720/frames/730x730_1x1_30p/moon/moonbump.jpg",
             scene
         );
+        moonMaterial.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
         moonMaterial.bumpTexture.level = 0.8;
 
         const moon = BABYLON.MeshBuilder.CreateSphere(
