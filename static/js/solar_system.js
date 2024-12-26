@@ -217,7 +217,7 @@ window.addEventListener('DOMContentLoaded', function() {
         camera.attachControl(canvas, true);
         camera.minZ = 0.1;
         camera.maxZ = 2000;
-        camera.lowerRadiusLimit = 10; 
+        camera.lowerRadiusLimit = 10;
         camera.upperRadiusLimit = 400;
         camera.wheelPrecision = 50;
         camera.pinchPrecision = 50;
@@ -281,7 +281,7 @@ window.addEventListener('DOMContentLoaded', function() {
         scene.environmentTexture = envTexture;
         scene.createDefaultSkybox(envTexture, true, 1000);
 
-        const createOrbitLine = (radius) => {
+        const createOrbitLine = (radius, planetName) => {
             const points = [];
             const segments = 128;
             for (let i = 0; i <= segments; i++) {
@@ -292,7 +292,51 @@ window.addEventListener('DOMContentLoaded', function() {
                     radius * Math.sin(angle)
                 ));
             }
-            return BABYLON.MeshBuilder.CreateLines("orbit", { points: points }, scene);
+            const orbit = BABYLON.MeshBuilder.CreateLines("orbit-" + planetName, { points: points }, scene);
+            orbit.color = new BABYLON.Color3(0.4, 0.4, 0.4);
+            orbit.alpha = 0.3;
+            orbit.isPickable = true;
+
+            // Create orbit visualization material
+            const orbitMaterial = new BABYLON.StandardMaterial("orbitMaterial-" + planetName, scene);
+            orbitMaterial.emissiveColor = new BABYLON.Color3(0.4, 0.6, 1.0);
+            orbitMaterial.alpha = 0.3;
+            orbit.material = orbitMaterial;
+
+            // Add hover effect
+            orbit.actionManager = new BABYLON.ActionManager(scene);
+            orbit.actionManager.registerAction(
+                new BABYLON.ExecuteCodeAction(
+                    BABYLON.ActionManager.OnPointerOverTrigger,
+                    () => {
+                        orbit.color = new BABYLON.Color3(0.6, 0.8, 1.0);
+                        orbit.alpha = 0.8;
+
+                        // Show orbital info in tooltip
+                        const planetData = celestialBodies[planetName].facts;
+                        const orbitInfo = `
+                            <strong>${planetName.charAt(0).toUpperCase() + planetName.slice(1)}'s Orbit</strong>
+                            <div><span class="fact-label">Distance from Sun:</span> ${planetData.distanceFromSun}</div>
+                            <div><span class="fact-label">Orbital Period:</span> ${planetData.orbitalPeriod}</div>
+                        `;
+                        tooltip.style.display = 'block';
+                        tooltip.innerHTML = orbitInfo;
+                    }
+                )
+            );
+
+            orbit.actionManager.registerAction(
+                new BABYLON.ExecuteCodeAction(
+                    BABYLON.ActionManager.OnPointerOutTrigger,
+                    () => {
+                        orbit.color = new BABYLON.Color3(0.4, 0.4, 0.4);
+                        orbit.alpha = 0.3;
+                        tooltip.style.display = 'none';
+                    }
+                )
+            );
+
+            return orbit;
         };
 
         const createPlanetMaterial = (name, textureUrl) => {
@@ -331,6 +375,7 @@ window.addEventListener('DOMContentLoaded', function() {
         };
 
         const planets = {};
+        const orbits = {};
         for (let planetName in planetData) {
             const data = planetData[planetName];
             const material = createPlanetMaterial(planetName, data.texture);
@@ -355,8 +400,9 @@ window.addEventListener('DOMContentLoaded', function() {
                 )
             );
 
-            const orbit = createOrbitLine(data.distance);
-            orbit.color = new BABYLON.Color3(0.4, 0.4, 0.4);
+            // Create and store orbit
+            const orbit = createOrbitLine(data.distance, planetName);
+            orbits[planetName] = orbit;
         }
 
         const saturnRings = BABYLON.MeshBuilder.CreateTorus(
@@ -389,12 +435,12 @@ window.addEventListener('DOMContentLoaded', function() {
         moon.material = moonMaterial;
         moon.position = new BABYLON.Vector3(55, 0, 0);
 
-        const earthOrbit = createOrbitLine(50);
+        const earthOrbit = createOrbitLine(50, "earth");
         earthOrbit.color = new BABYLON.Color3(0.4, 0.4, 0.4);
 
         const moonOrbitHolder = new BABYLON.TransformNode("moonOrbitHolder");
         moonOrbitHolder.position = planets.earth.position;
-        const moonOrbit = createOrbitLine(8);
+        const moonOrbit = createOrbitLine(8, "moon");
         moonOrbit.parent = moonOrbitHolder;
         moonOrbit.color = new BABYLON.Color3(0.4, 0.4, 0.4);
 
@@ -593,6 +639,21 @@ window.addEventListener('DOMContentLoaded', function() {
 
         resetButton.addEventListener('click', () => {
             zoomToPlanet(sun, 150);
+        });
+
+        // Add orbit toggle button
+        const orbitToggleButton = document.createElement('button');
+        orbitToggleButton.textContent = 'Toggle Orbits';
+        orbitToggleButton.className = 'orbit-toggle-button';
+        document.body.appendChild(orbitToggleButton);
+
+        let orbitsVisible = true;
+        orbitToggleButton.addEventListener('click', () => {
+            orbitsVisible = !orbitsVisible;
+            for (let planetName in orbits) {
+                orbits[planetName].visibility = orbitsVisible ? 1 : 0;
+            }
+            orbitToggleButton.textContent = orbitsVisible ? 'Hide Orbits' : 'Show Orbits';
         });
 
         return scene;
