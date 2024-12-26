@@ -59,10 +59,13 @@ window.addEventListener('DOMContentLoaded', function() {
                    Zeus later placed Callisto in the stars as Ursa Major to honor her. 
                    The constellation's distinctive 'Big Dipper' pattern has been used for navigation throughout history.`,
             stars: [
-                [0, 10, 50],  // Placeholder coordinates for stars
-                [5, 12, 48],
-                [8, 15, 52],
-                // Add more star coordinates as needed
+                [100, 30, 80],   // Dubhe
+                [95, 32, 85],    // Merak
+                [90, 33, 90],    // Phecda
+                [85, 31, 95],    // Megrez
+                [80, 35, 100],   // Alioth
+                [75, 34, 105],   // Mizar
+                [70, 33, 110]    // Alkaid
             ]
         },
         'orion': {
@@ -72,10 +75,13 @@ window.addEventListener('DOMContentLoaded', function() {
                    Zeus placed him among the stars where he eternally hunts across the night sky. 
                    The distinctive three stars of Orion's Belt make this one of the most recognizable constellations.`,
             stars: [
-                [20, 5, 30],  // Placeholder coordinates for stars
-                [22, 8, 32],
-                [24, 5, 34],
-                // Add more star coordinates as needed
+                [120, 20, -30],  // Betelgeuse
+                [125, 15, -25],  // Bellatrix
+                [123, 10, -20],  // Alnitak
+                [123, 10, -15],  // Alnilam
+                [123, 10, -10],  // Mintaka
+                [125, 5, -5],    // Saiph
+                [120, 5, -35]    // Rigel
             ]
         },
         'cassiopeia': {
@@ -85,10 +91,11 @@ window.addEventListener('DOMContentLoaded', function() {
                    As punishment for her pride, she was placed in the stars on a throne, forced to circle the celestial pole forever. 
                    The constellation forms a distinctive 'W' or 'M' shape in the night sky.`,
             stars: [
-                [-15, 8, 40],  // Placeholder coordinates for stars
-                [-12, 12, 38],
-                [-9, 8, 36],
-                // Add more star coordinates as needed
+                [-90, 40, 70],   // Shedar
+                [-85, 45, 65],   // Caph
+                [-80, 35, 60],   // Gamma Cas
+                [-75, 30, 55],   // Ruchbah
+                [-70, 25, 50]    // Segin
             ]
         }
     };
@@ -227,28 +234,39 @@ window.addEventListener('DOMContentLoaded', function() {
         });
         gl.intensity = 0.7;
 
-        // Create constellation meshes
+        // Create constellation meshes with enhanced visuals
         const constellationMeshes = {};
         for (let id in constellations) {
             const constellation = constellations[id];
             const starMeshes = [];
 
-            // Create stars for each constellation
+            // Create stars with enhanced appearance
             constellation.stars.forEach((position, index) => {
                 const star = BABYLON.MeshBuilder.CreateSphere(
                     `${id}-star-${index}`,
-                    { diameter: 0.5 },
+                    { diameter: 1.2, segments: 16 },
                     scene
                 );
                 const starMaterial = new BABYLON.StandardMaterial(`${id}-star-material-${index}`, scene);
-                starMaterial.emissiveColor = new BABYLON.Color3(0.9, 0.9, 1);
+                starMaterial.emissiveColor = new BABYLON.Color3(0.98, 0.98, 1);
+                starMaterial.specularColor = new BABYLON.Color3(0.98, 0.98, 1);
+                starMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
                 star.material = starMaterial;
                 star.position = new BABYLON.Vector3(...position);
-                star.visibility = 0; // Initially hidden
+                star.visibility = 0;
+
+                // Add glow effect to stars
+                const glowLayer = new BABYLON.GlowLayer(`${id}-glow-${index}`, scene, {
+                    mainTextureFixedSize: 256,
+                    blurKernelSize: 64
+                });
+                glowLayer.intensity = 0.5;
+                glowLayer.addIncludedOnlyMesh(star);
+
                 starMeshes.push(star);
             });
 
-            // Create lines connecting stars
+            // Create lines with enhanced appearance
             const lines = [];
             for (let i = 0; i < constellation.stars.length - 1; i++) {
                 const points = [
@@ -259,8 +277,9 @@ window.addEventListener('DOMContentLoaded', function() {
                     points: points,
                     updatable: true
                 }, scene);
-                line.color = new BABYLON.Color3(0.5, 0.5, 1);
-                line.visibility = 0; // Initially hidden
+                line.color = new BABYLON.Color3(0.5, 0.7, 1);
+                line.alpha = 0.6;
+                line.visibility = 0;
                 lines.push(line);
             }
 
