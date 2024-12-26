@@ -6,20 +6,20 @@ window.addEventListener('DOMContentLoaded', function() {
         const scene = new BABYLON.Scene(engine);
         scene.clearColor = new BABYLON.Color3(0, 0, 0);
 
-        // Enhanced Camera with wider view
+        // Enhanced Camera
         const camera = new BABYLON.ArcRotateCamera(
             "camera",
             0,
             Math.PI / 3,
-            250,
+            150,
             BABYLON.Vector3.Zero(),
             scene
         );
         camera.attachControl(canvas, true);
         camera.minZ = 0.1;
-        camera.maxZ = 3000;
-        camera.lowerRadiusLimit = 100;
-        camera.upperRadiusLimit = 800;
+        camera.maxZ = 2000;
+        camera.lowerRadiusLimit = 80;
+        camera.upperRadiusLimit = 400;
         camera.wheelPrecision = 50;
 
         // Enhanced Lighting
@@ -33,9 +33,9 @@ window.addEventListener('DOMContentLoaded', function() {
         // Environment
         const envTexture = new BABYLON.CubeTexture("https://playground.babylonjs.com/textures/space", scene);
         scene.environmentTexture = envTexture;
-        scene.createDefaultSkybox(envTexture, true, 1500);
+        scene.createDefaultSkybox(envTexture, true, 1000);
 
-        // Create Sun
+        // Create Sun with enhanced material
         const sunMaterial = new BABYLON.StandardMaterial("sunMaterial", scene);
         sunMaterial.emissiveTexture = new BABYLON.Texture(
             "https://www.solarsystemscope.com/textures/download/2k_sun.jpg",
@@ -52,135 +52,22 @@ window.addEventListener('DOMContentLoaded', function() {
         );
         sun.material = sunMaterial;
 
-        // Create orbit lines function - Moved before createPlanet
-        const createOrbitLine = (radius) => {
-            const points = [];
-            const segments = 128;
-            for (let i = 0; i <= segments; i++) {
-                const angle = (i * Math.PI * 2) / segments;
-                points.push(new BABYLON.Vector3(
-                    radius * Math.cos(angle),
-                    0,
-                    radius * Math.sin(angle)
-                ));
-            }
-            return BABYLON.MeshBuilder.CreateLines("orbit", { points: points }, scene);
-        };
-
-        // Planet creation function
-        const createPlanet = (name, diameter, texturePath, orbitRadius, rotationSpeed, orbitSpeed) => {
-            const material = new BABYLON.StandardMaterial(name + "Material", scene);
-            material.diffuseTexture = new BABYLON.Texture(texturePath, scene);
-            material.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-            material.specularPower = 16;
-
-            const planet = BABYLON.MeshBuilder.CreateSphere(
-                name,
-                { diameter: diameter, segments: 32 },
-                scene
-            );
-            planet.material = material;
-            planet.position = new BABYLON.Vector3(orbitRadius, 0, 0);
-            planet.rotationSpeed = rotationSpeed;
-            planet.orbitSpeed = orbitSpeed;
-
-            // Create orbit line
-            const orbitLine = createOrbitLine(orbitRadius);
-            orbitLine.color = new BABYLON.Color3(0.4, 0.4, 0.4);
-
-            return planet;
-        };
-
-        // Create planets
-        const mercury = createPlanet(
-            "mercury",
-            2.5,
-            "https://www.solarsystemscope.com/textures/download/2k_mercury.jpg",
-            30,
-            0.015,
-            0.008
-        );
-
-        const venus = createPlanet(
-            "venus",
-            4,
-            "https://www.solarsystemscope.com/textures/download/2k_venus_surface.jpg",
-            40,
-            0.012,
-            0.006
-        );
-
-        const earth = createPlanet(
-            "earth",
-            5,
+        // Create Earth with enhanced material
+        const earthMaterial = new BABYLON.StandardMaterial("earthMaterial", scene);
+        earthMaterial.diffuseTexture = new BABYLON.Texture(
             "https://www.solarsystemscope.com/textures/download/2k_earth_daymap.jpg",
-            50,
-            0.02,
-            0.005
-        );
-
-        const mars = createPlanet(
-            "mars",
-            3.5,
-            "https://www.solarsystemscope.com/textures/download/2k_mars.jpg",
-            65,
-            0.018,
-            0.004
-        );
-
-        const jupiter = createPlanet(
-            "jupiter",
-            15,
-            "https://www.solarsystemscope.com/textures/download/2k_jupiter.jpg",
-            90,
-            0.04,
-            0.002
-        );
-
-        const saturn = createPlanet(
-            "saturn",
-            12,
-            "https://www.solarsystemscope.com/textures/download/2k_saturn.jpg",
-            120,
-            0.038,
-            0.001
-        );
-
-        const uranus = createPlanet(
-            "uranus",
-            10,
-            "https://www.solarsystemscope.com/textures/download/2k_uranus.jpg",
-            150,
-            0.034,
-            0.0007
-        );
-
-        const neptune = createPlanet(
-            "neptune",
-            9.5,
-            "https://www.solarsystemscope.com/textures/download/2k_neptune.jpg",
-            180,
-            0.032,
-            0.0005
-        );
-
-        // Create Saturn's rings
-        const ringMaterial = new BABYLON.StandardMaterial("saturnRingMaterial", scene);
-        ringMaterial.diffuseTexture = new BABYLON.Texture(
-            "https://www.solarsystemscope.com/textures/download/2k_saturn_ring_alpha.png",
             scene
         );
-        ringMaterial.diffuseTexture.hasAlpha = true;
+        earthMaterial.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+        earthMaterial.specularPower = 16;
 
-        const saturnRing = BABYLON.MeshBuilder.CreateDisc(
-            "saturnRing",
-            { radius: 20, tessellation: 64 },
+        const earth = BABYLON.MeshBuilder.CreateSphere(
+            "earth",
+            { diameter: 5, segments: 32 },
             scene
         );
-        saturnRing.material = ringMaterial;
-        saturnRing.parent = saturn;
-        saturnRing.rotation.x = Math.PI / 2;
-        saturnRing.scaling.y = 0.1;
+        earth.material = earthMaterial;
+        earth.position = new BABYLON.Vector3(50, 0, 0);
 
         // Create Moon
         const moonMaterial = new BABYLON.StandardMaterial("moonMaterial", scene);
@@ -197,6 +84,24 @@ window.addEventListener('DOMContentLoaded', function() {
         moon.material = moonMaterial;
         moon.position = new BABYLON.Vector3(55, 0, 0);
 
+        // Create orbit lines
+        const createOrbitLine = (radius) => {
+            const points = [];
+            const segments = 128;
+            for (let i = 0; i <= segments; i++) {
+                const angle = (i * Math.PI * 2) / segments;
+                points.push(new BABYLON.Vector3(
+                    radius * Math.cos(angle),
+                    0,
+                    radius * Math.sin(angle)
+                ));
+            }
+            return BABYLON.MeshBuilder.CreateLines("orbit", { points: points }, scene);
+        };
+
+        const earthOrbit = createOrbitLine(50);
+        earthOrbit.color = new BABYLON.Color3(0.4, 0.4, 0.4);
+
         const moonOrbitHolder = new BABYLON.TransformNode("moonOrbitHolder");
         moonOrbitHolder.position = earth.position;
         const moonOrbit = createOrbitLine(8);
@@ -206,12 +111,10 @@ window.addEventListener('DOMContentLoaded', function() {
         // Animation
         let angle = 0;
         scene.registerBeforeRender(function() {
-            // Planet orbits and rotations
-            [mercury, venus, earth, mars, jupiter, saturn, uranus, neptune].forEach(planet => {
-                planet.position.x = Math.cos(angle * planet.orbitSpeed) * planet.position.length();
-                planet.position.z = Math.sin(angle * planet.orbitSpeed) * planet.position.length();
-                planet.rotation.y += planet.rotationSpeed;
-            });
+            // Earth orbit around Sun
+            earth.position.x = Math.cos(angle) * 50;
+            earth.position.z = Math.sin(angle) * 50;
+            earth.rotation.y += 0.02;
 
             // Moon orbit around Earth
             moonOrbitHolder.position = earth.position;
