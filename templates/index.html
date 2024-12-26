@@ -11,6 +11,15 @@
 <body>
     <canvas id="renderCanvas"></canvas>
     <div id="tooltip" class="tooltip"></div>
+    <div class="constellation-list" id="constellationList">
+        <button data-constellation="ursa-major">Ursa Major</button>
+        <button data-constellation="orion">Orion</button>
+        <button data-constellation="cassiopeia">Cassiopeia</button>
+    </div>
+    <div class="constellation-panel" id="constellationPanel">
+        <h2 id="constellationTitle"></h2>
+        <div class="story" id="constellationStory"></div>
+    </div>
     <script src="{{ url_for('static', filename='js/solar_system.js') }}"></script>
 </body>
 </html>

@@ -43,3 +43,62 @@ html, body {
     color: #88ccff;
     font-weight: bold;
 }
+
+.constellation-panel {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    font-family: Arial, sans-serif;
+    width: 300px;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    display: none;
+}
+
+.constellation-panel h2 {
+    color: #ffd700;
+    margin: 0 0 10px 0;
+    font-size: 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    padding-bottom: 8px;
+}
+
+.constellation-panel .story {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-top: 10px;
+}
+
+.constellation-list {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    font-family: Arial, sans-serif;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.constellation-list button {
+    display: block;
+    background: transparent;
+    color: #88ccff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 5px 10px;
+    margin: 5px 0;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.constellation-list button:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffd700;
+}

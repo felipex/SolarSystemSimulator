@@ -51,6 +51,48 @@ window.addEventListener('DOMContentLoaded', function() {
         }
     };
 
+    const constellations = {
+        'ursa-major': {
+            name: 'Ursa Major (Great Bear)',
+            story: `The Great Bear constellation tells the story of Callisto, a beautiful nymph who caught the eye of Zeus. 
+                   Hera, Zeus's wife, discovered this and in her jealousy transformed Callisto into a bear. 
+                   Zeus later placed Callisto in the stars as Ursa Major to honor her. 
+                   The constellation's distinctive 'Big Dipper' pattern has been used for navigation throughout history.`,
+            stars: [
+                [0, 10, 50],  // Placeholder coordinates for stars
+                [5, 12, 48],
+                [8, 15, 52],
+                // Add more star coordinates as needed
+            ]
+        },
+        'orion': {
+            name: 'Orion (The Hunter)',
+            story: `Orion was a giant hunter in Greek mythology, known for his skill and beauty. 
+                   According to legend, he was killed by a scorpion sent by Gaia (or in some versions, by Artemis). 
+                   Zeus placed him among the stars where he eternally hunts across the night sky. 
+                   The distinctive three stars of Orion's Belt make this one of the most recognizable constellations.`,
+            stars: [
+                [20, 5, 30],  // Placeholder coordinates for stars
+                [22, 8, 32],
+                [24, 5, 34],
+                // Add more star coordinates as needed
+            ]
+        },
+        'cassiopeia': {
+            name: 'Cassiopeia (The Queen)',
+            story: `Cassiopeia was a vain queen in Greek mythology who boasted that she and her daughter Andromeda were more beautiful than the Nereids. 
+                   This angered Poseidon, who sent a sea monster to ravage the coast of her kingdom. 
+                   As punishment for her pride, she was placed in the stars on a throne, forced to circle the celestial pole forever. 
+                   The constellation forms a distinctive 'W' or 'M' shape in the night sky.`,
+            stars: [
+                [-15, 8, 40],  // Placeholder coordinates for stars
+                [-12, 12, 38],
+                [-9, 8, 36],
+                // Add more star coordinates as needed
+            ]
+        }
+    };
+
     const createScene = function() {
         const scene = new BABYLON.Scene(engine);
         scene.clearColor = new BABYLON.Color3(0, 0, 0);
@@ -184,6 +226,77 @@ window.addEventListener('DOMContentLoaded', function() {
             blurKernelSize: 64
         });
         gl.intensity = 0.7;
+
+        // Create constellation meshes
+        const constellationMeshes = {};
+        for (let id in constellations) {
+            const constellation = constellations[id];
+            const starMeshes = [];
+
+            // Create stars for each constellation
+            constellation.stars.forEach((position, index) => {
+                const star = BABYLON.MeshBuilder.CreateSphere(
+                    `${id}-star-${index}`,
+                    { diameter: 0.5 },
+                    scene
+                );
+                const starMaterial = new BABYLON.StandardMaterial(`${id}-star-material-${index}`, scene);
+                starMaterial.emissiveColor = new BABYLON.Color3(0.9, 0.9, 1);
+                star.material = starMaterial;
+                star.position = new BABYLON.Vector3(...position);
+                star.visibility = 0; // Initially hidden
+                starMeshes.push(star);
+            });
+
+            // Create lines connecting stars
+            const lines = [];
+            for (let i = 0; i < constellation.stars.length - 1; i++) {
+                const points = [
+                    new BABYLON.Vector3(...constellation.stars[i]),
+                    new BABYLON.Vector3(...constellation.stars[i + 1])
+                ];
+                const line = BABYLON.MeshBuilder.CreateLines(`${id}-line-${i}`, {
+                    points: points,
+                    updatable: true
+                }, scene);
+                line.color = new BABYLON.Color3(0.5, 0.5, 1);
+                line.visibility = 0; // Initially hidden
+                lines.push(line);
+            }
+
+            constellationMeshes[id] = { stars: starMeshes, lines: lines };
+        }
+
+        // Add constellation interaction
+        const constellationList = document.getElementById('constellationList');
+        const constellationPanel = document.getElementById('constellationPanel');
+        const constellationTitle = document.getElementById('constellationTitle');
+        const constellationStory = document.getElementById('constellationStory');
+
+        let currentConstellation = null;
+
+        constellationList.addEventListener('click', (event) => {
+            if (event.target.tagName === 'BUTTON') {
+                const constellationId = event.target.dataset.constellation;
+
+                // Hide previously shown constellation
+                if (currentConstellation) {
+                    constellationMeshes[currentConstellation].stars.forEach(star => star.visibility = 0);
+                    constellationMeshes[currentConstellation].lines.forEach(line => line.visibility = 0);
+                }
+
+                // Show selected constellation
+                constellationMeshes[constellationId].stars.forEach(star => star.visibility = 1);
+                constellationMeshes[constellationId].lines.forEach(line => line.visibility = 1);
+
+                // Update panel content
+                constellationTitle.textContent = constellations[constellationId].name;
+                constellationStory.textContent = constellations[constellationId].story;
+                constellationPanel.style.display = 'block';
+
+                currentConstellation = constellationId;
+            }
+        });
 
         // Add pointer events for tooltips
         scene.onPointerMove = function(evt) {
