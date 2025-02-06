@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Solar System Simulation</title>
+    <style>
+        canvas { width: 100%; height: 100%; }
+        body { margin: 0; overflow: hidden; }
+        #controls { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.5); color: white; padding: 10px; }
+        #infoPanel { position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.5); color: white; padding: 10px; }
+    </style>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <div id="controls">
+        <button id="focusSun">Focus on Sun</button>
+        <button id="focusEarth">Focus on Earth</button>
+        <button id="focusMoon">Focus on Moon</button>
+        <div>
+            <label>Earth Speed: <input type="range" min="0.1" max="5" step="0.1" value="1" id="earthSpeed"></label>
+            <label>Moon Speed: <input type="range" min="0.1" max="5" step="0.1" value="1" id="moonSpeed"></label>
+        </div>
+        <button id="pauseSimulation">Pause Simulation</button>
+    </div>
+    <div id="infoPanel">
+        <!-- Info about selected object will be displayed here -->
+    </div>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+<!--<script src="main.js"></script>-->
+    <script>
+        // Initialize the Babylon.js engine and create the scene
+        var isPaused = false;
+        // Animation variables
+        var earthRotationAngle = 0;
+        var moonRotationAngle = 0;
+        var earthRotationSpeed = parseFloat(document.getElementById('earthSpeed').value) * (2 * Math.PI / (10 * 1000));
+        var moonRotationSpeed = parseFloat(document.getElementById('moonSpeed').value) * (2 * Math.PI / (2 * 1000));
+
+        var sun = null;
+        var earth = null;
+        var moon = null;
+
+        function loadTexture(url, scene) {
+            return new Promise((resolve, reject) => {
+                var texture = new BABYLON.Texture(url, scene, undefined, false, BABYLON.Texture.FORMAT_RGBA);
+                texture.onLoadObservable.add(() => {
+                    resolve(texture);
+                });
+                texture.onError = function() {
+                    reject(new Error("Failed to load texture: " + url));
+                };
+            });
+        }
+        
+        var createScene = function () {
+            var scene = new BABYLON.Scene(engine);
+
+            // Create the camera
+            var camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 4, 10, BABYLON.Vector3.Zero(), scene);
+            camera.attachControl(canvas, true);
+
+            // Create a light
+            var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
+
+            // Create the Sun
+            sun = BABYLON.MeshBuilder.CreateSphere("sun", { diameter: 2 }, scene);
+            var sunMaterial = new BABYLON.StandardMaterial("sunMaterial", scene);
+            sunMaterial.diffuseColor = new BABYLON.Color3(1, 1, 0); // Yellow
+            sun.material = sunMaterial;
+
+            // Create the Earth
+            earth = BABYLON.MeshBuilder.CreateSphere("earth", { diameter: 1 }, scene);
+            var earthMaterial = new BABYLON.StandardMaterial("earthMaterial", scene);
+            earthMaterial.diffuseColor = new BABYLON.Color3(0, 0, 1); // Blue
+            earth.position.x = 10; // Place Earth away from the Sun
+            earth.material = earthMaterial;
+
+            // Create the Moon
+            moon = BABYLON.MeshBuilder.CreateSphere("moon", { diameter: 0.5 }, scene);
+            var moonMaterial = new BABYLON.StandardMaterial("moonMaterial", scene);
+            moonMaterial.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8); // Gray
+            moon.position.x = 2; // Place Moon near the Earth
+            moon.parent = earth; // Moon orbits Earth
+
+
+            Promise.all([
+                loadTexture("https://raw.githubusercontent.com/BabylonJS/Babylon.js/refs/heads/master/packages/tools/playground/public/textures/earth.jpg", scene),
+                loadTexture("textures/sun_texture.jpg", scene),
+                loadTexture("textures/moon_texture.jpg", scene)
+            ]).then(function(textures) {
+                var earthTexture = textures[0];
+                var sunTexture = textures[1];
+                var moonTexture = textures[2];
+
+                // Create materials and assign textures
+                var earthMaterial = new BABYLON.StandardMaterial("earthMaterial", scene);
+                earthMaterial.diffuseTexture = earthTexture;
+                earthMaterial.backFaceCulling = false;
+
+                var sunMaterial = new BABYLON.StandardMaterial("sunMaterial", scene);
+                sunMaterial.diffuseTexture = sunTexture;
+                sunMaterial.backFaceCulling = false;
+
+                var moonMaterial = new BABYLON.StandardMaterial("moonMaterial", scene);
+                moonMaterial.diffuseTexture = moonTexture;
+                moonMaterial.backFaceCulling = false;
+
+                // Assign materials to meshes
+                earth.material = earthMaterial;
+                sun.material = sunMaterial;
+                moon.material = moonMaterial;
+            });
+            // User interactions
+            document.getElementById('focusSun').addEventListener('click', function() {
+                camera.setTarget(sun.position);
+            });
+            document.getElementById('focusEarth').addEventListener('click', function() {
+                camera.setTarget(earth.position);
+            });
+            document.getElementById('focusMoon').addEventListener('click', function() {
+                camera.setTarget(moon.position);
+            });
+
+            // Speed controls
+            document.getElementById('earthSpeed').addEventListener('input', function() {
+                earthRotationSpeed = parseFloat(this.value) * (2 * Math.PI / (10 * 1000));
+            });
+            document.getElementById('moonSpeed').addEventListener('input', function() {
+                moonRotationSpeed = parseFloat(this.value) * (2 * Math.PI / (2 * 1000));
+            });
+
+            // Pause simulation
+            var pauseSimulation = document.getElementById('pauseSimulation');
+            pauseSimulation.addEventListener('click', function() {
+                isPaused = !isPaused;
+                this.textContent = isPaused ? 'Resume Simulation' : 'Pause Simulation';
+            });
+
+            // Picking for info display
+            scene.onPointerDown = function (evt) {
+                var pickInfo = scene.pick(scene.pointerX, scene.pointerY);
+                if (pickInfo.hit) {
+                    switch (pickInfo.pickedMesh.name) {
+                        case "sun":
+                            document.getElementById('infoPanel').innerHTML = "Sun: Diameter - 2 units";
+                            break;
+                        case "earth":
+                            document.getElementById('infoPanel').innerHTML = "Earth: Diameter - 0.2 units";
+                            break;
+                        case "moon":
+                            document.getElementById('infoPanel').innerHTML = "Moon: Diameter - 0.05 units";
+                            break;
+                    }
+                }
+            };
+
+            return scene;
+        };
+
+        // Initialize the Babylon.js engine
+        var canvas = document.getElementById("renderCanvas");
+        var engine = new BABYLON.Engine(canvas, true);
+        var scene = createScene();
+
+        // Render loop
+        engine.runRenderLoop(function () {
+            if (!isPaused) {
+                var delta = engine.getDeltaTime();
+                earthRotationAngle += earthRotationSpeed * delta;
+                moonRotationAngle += moonRotationSpeed * delta;
+
+                earth.position.x = sun.position.x + 10 * Math.cos(earthRotationAngle);
+                earth.position.z = sun.position.z + 10 * Math.sin(earthRotationAngle);
+
+                moon.position.x = earth.position.x + 0.3 * Math.cos(moonRotationAngle);
+                moon.position.z = earth.position.z + 0.3 * Math.sin(moonRotationAngle);
+            }
+            scene.render();
+        });
+
+        // Resize handler
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+    </script>
+</body>
+</html>

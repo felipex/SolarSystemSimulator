@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Solar System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+
+<style>
+    .controls {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: transparent;
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        font-family: Arial, sans-serif;
+        width: 300px;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        display: block;
+    }
+
+    .controls button {
+    display: block;
+    background: transparent;
+    color: #88ccff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 5px 10px;
+    margin: 5px 0;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    }
+
+
+</style>    
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <div id="loadingText">Loading Solar System...</div>
+    <div class="controls">
+        <button onclick="toggleAnimation()">Play/Pause</button>
+        <button onclick="adjustSpeed(0.5)">Slower</button>
+        <button onclick="adjustSpeed(2)">Faster</button>
+        <button onclick="toggleCamera()">Switch Camera</button>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', function() {
+
+            const scala = 1000;
+            const RSun = 696340 / scala/20
+            const RMercury = 2439.7 / scala;
+            const RVenus = 6051.8 / scala;
+            const REarth = 6371 / scala;
+            const RMars = 3389.5 / scala;
+            const RJupiter = 69911 / scala;
+            const RSaturn = 58232 / scala;
+            const RUranus = 25362 / scala;
+            const RNeptune = 24622 / scala;
+            const RMoon = 1737.4 / scala;
+
+            const scala2 = 1000;
+            const DistanceSunMercury = 57909227 / scala2 ;    
+            const DistanceSunVenus = 108200000 / scala2;
+            const DistanceSunEarth = 149600000 / scala2 / 1000;
+            const DistanceSunMars = 227900000 / scala2 /1000;
+            const DistanceSunJupiter = 778412000 / scala2 /1000
+            const DistanceSunSaurn = 142984000 / scala2;
+            const DistanceSunUranus = 287068000 / scala2;
+            const DistanceSunNeptune = 449495000 / scala2;
+            const DistanceEarthMoon = 3786 / scala2;
+            
+            
+            const canvas = document.getElementById('renderCanvas');
+            const loadingText = document.getElementById('loadingText');
+            const engine = new BABYLON.Engine(canvas, true);
+            let scene, camera, sun, earth, moon;
+            let animationPaused = false;
+            let speedMultiplier = 1;
+            let followEarth = false;
+
+            const createScene = function() {
+                // Create scene
+                const scene = new BABYLON.Scene(engine);
+                scene.clearColor = new BABYLON.Color3(0, 0, 0.1);
+
+                // Camera
+                camera = new BABYLON.ArcRotateCamera("camera", 0, Math.PI / 3, (DistanceSunEarth)*2.2, 
+                    BABYLON.Vector3.Zero(), scene);
+                camera.setTarget(BABYLON.Vector3.Zero());
+                camera.attachControl(canvas, true);
+                camera.lowerRadiusLimit = 50;
+                //camera.upperRadiusLimit = 300;                
+
+                // Light
+                const light = new BABYLON.PointLight("light", BABYLON.Vector3.Zero(), scene);
+                light.intensity = 1;
+                light.shadowEnabled = true;
+                //const envTexture = new BABYLON.CubeTexture("https://playground.babylonjs.com/textures/space", scene);
+                //scene.environmentTexture = envTexture;
+                //scene.createDefaultSkybox(envTexture, true, 1000);
+
+                // Sun
+                sun = BABYLON.MeshBuilder.CreateSphere("sun", { diameter: 2*RSun, segments: 12}, scene);
+                const sunMaterial = new BABYLON.StandardMaterial("sunMaterial", scene);
+
+                sunMaterial.wireframe = false;
+                //sunMaterial.wireframeColor = new BABYLON.Color3(1, 1, 0);
+                sunMaterial.emissiveColor = new BABYLON.Color3(1, 1, 0);
+                sun.material = sunMaterial;
+
+                // Earth
+                earth = BABYLON.MeshBuilder.CreateSphere("earth", { diameter: 2*REarth, segments: 12 }, scene);
+                const earthMaterial = new BABYLON.StandardMaterial("earthMaterial", scene);
+                const IMG_EARTH = "https://raw.githubusercontent.com/BabylonJS/Babylon.js/refs/heads/master/packages/tools/playground/public/textures/earth.jpg"
+
+                earthMaterial.wireframe = false;
+                earthMaterial.emissiveTexture = new BABYLON.Texture(IMG_EARTH, scene);
+                //earthMaterial.diffuseColor = new BABYLON.Color3(0.2, 0.5, 1);
+                earth.material = earthMaterial;
+                earth.position = new BABYLON.Vector3(DistanceSunEarth, 0, 0);
+                // Não sei porque, mas a textura ficou de cabeça pra baixo. 
+                // Vou fazer a rotação depois vejo como resolver com UV mapping.
+                earth.rotate(BABYLON.Axis.X, Math.PI, BABYLON.Space.LOCAL);
+
+                earth.rotate(BABYLON.Axis.Y, Math.PI * 0.1278, BABYLON.Space.LOCAL)
+
+                const orbitEarth = BABYLON.MeshBuilder.CreateTorus("orbitEarth", 
+                {
+                    diameter: 2*DistanceSunEarth, 
+                    thickness: 0.5,
+                    tessellation: 64
+                }, scene);
+
+                // Moon
+                moon = BABYLON.MeshBuilder.CreateSphere("moon", { diameter: 2*RMoon, segments: 12 }, scene);
+                const moonMaterial = new BABYLON.StandardMaterial("moonMaterial", scene);
+                const IMG_MOON = "https://blenderartists.org/uploads/default/original/3X/f/6/f6411fc50b7d3fb25b1375a3df66ffe7e97b0001.jpg";
+                moonMaterial.wireframe = false;
+                moonMaterial.emissiveTexture = new BABYLON.Texture(IMG_MOON, scene);
+                moon.material = moonMaterial;
+                moon.position = new BABYLON.Vector3(DistanceSunEarth+DistanceEarthMoon, 0, 0);
+
+                const orbitMoon = BABYLON.MeshBuilder.CreateTorus("orbitMoon", 
+                {
+                    diameter: 2*(DistanceEarthMoon + REarth), 
+                    thickness: 0.5,
+                    tessellation: 64
+                }, scene);
+                orbitMoon.parent = earth;
+                //orbitMoon.rotate(BABYLON.Axis.X, 5*Math.PI/36, BABYLON.Space.LOCAL);
+                
+                // Create a shadow generator
+                var shadowGenerator = new BABYLON.ShadowGenerator(1024, light);
+                shadowGenerator.getShadowMap().renderList.push(moon); 
+                shadowGenerator.getShadowMap().renderList.push(earth); 
+
+                // Add shadow caster and receiver to the shadow generator
+                earth.receiveShadows = true;
+                moon.receiveShadows = true;
+                // Orbit lines
+                const earthOrbitRadius = 50;
+                const moonOrbitRadius = 7;
+
+                const orbitMaterial = new BABYLON.StandardMaterial("orbitMaterial", scene);
+                orbitMaterial.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+                orbitMaterial.alpha = 0.2;
+                //earthOrbit.material = orbitMaterial;
+                //moonOrbit.material = orbitMaterial;
+
+                // Add glow layer
+                const gl = new BABYLON.GlowLayer("glow", scene);
+                gl.intensity = 0.5;
+
+                return scene;
+            };
+
+            scene = createScene();
+
+            let earthAngle = 0;
+            let moonAngle = 0;
+
+            let tick0 = performance.now();
+            engine.runRenderLoop(function() {
+                if (!animationPaused) {
+                    // Earth orbit
+                    earthAngle += 0.005 * speedMultiplier;
+                    earth.position.x = DistanceSunEarth * Math.cos(earthAngle);
+                    earth.position.z = DistanceSunEarth * Math.sin(earthAngle);
+                    earth.rotation.y += 0.02 * speedMultiplier;
+
+                    // Earth rotation
+                    let tick1 = performance.now();
+                    let dt = tick1 - tick0;
+                    tick0 = tick1;
+                    earth.rotate(BABYLON.Axis.Y,  dt/1000, BABYLON.Space.LOCAL);
+                    sun.rotate(BABYLON.Axis.Y,  dt/1000, BABYLON.Space.LOCAL);
+
+                    // Moon orbit
+                    moonAngle += 0.015 * speedMultiplier;
+                    moon.position.x = earth.position.x + (REarth + DistanceEarthMoon) * Math.cos(moonAngle*0.5);
+                    moon.position.z = earth.position.z + (REarth + DistanceEarthMoon) * Math.sin(moonAngle*0.5);
+                    moon.position.y = earth.position.y + 5*Math.cos(moonAngle*0.5);
+
+                    if (followEarth) {
+                        camera.setTarget(earth.position);
+                    }
+                }
+                scene.render();
+            });
+
+            // Hide loading text when scene is ready
+            loadingText.style.display = 'none';
+
+            // Window resize handler
+            window.addEventListener('resize', function() {
+                engine.resize();
+            });
+
+            // Control functions
+            window.toggleAnimation = function() {
+                animationPaused = !animationPaused;
+            };
+
+            window.adjustSpeed = function(multiplier) {
+                speedMultiplier *= multiplier;
+            };
+
+            window.toggleCamera = function() {
+                followEarth = !followEarth;
+                if (!followEarth) {
+                    camera.setTarget(BABYLON.Vector3.Zero());
+                }
+            };
+
+            // Touch controls
+            let touchStartX = 0;
+            canvas.addEventListener('touchstart', function(e) {
+                touchStartX = e.touches[0].clientX;
+            });
+
+            canvas.addEventListener('touchmove', function(e) {
+                const touchX = e.touches[0].clientX;
+                const deltaX = touchX - touchStartX;
+
+                if (Math.abs(deltaX) > 10) {
+                    adjustSpeed(deltaX > 0 ? 1.1 : 0.9);
+                    touchStartX = touchX;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Solar System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+
+<style>
+    .controls {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: transparent;
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        font-family: Arial, sans-serif;
+        width: 300px;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        display: block;
+    }
+
+    .controls button {
+    display: block;
+    background: transparent;
+    color: #88ccff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 5px 10px;
+    margin: 5px 0;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    }
+
+
+</style>    
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    <div id="loadingText">Loading Solar System...</div>
+    <div class="controls">
+        <button onclick="toggleAnimation()">Play/Pause</button>
+        <button onclick="adjustSpeed(0.5)">Slower</button>
+        <button onclick="adjustSpeed(2)">Faster</button>
+        <button onclick="toggleCamera()">Switch Camera</button>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', function() {
+            const canvas = document.getElementById('renderCanvas');
+            const loadingText = document.getElementById('loadingText');
+            const engine = new BABYLON.Engine(canvas, true);
+            let scene, camera, sun, earth, moon;
+            let animationPaused = false;
+            let speedMultiplier = 1;
+            let followEarth = false;
+
+            const createScene = function() {
+                // Create scene
+                const scene = new BABYLON.Scene(engine);
+                scene.clearColor = new BABYLON.Color3(0, 0, 0.1);
+
+                // Camera
+                camera = new BABYLON.ArcRotateCamera("camera", 0, Math.PI / 3, 100, 
+                    BABYLON.Vector3.Zero(), scene);
+                camera.setTarget(BABYLON.Vector3.Zero());
+                camera.attachControl(canvas, true);
+                camera.lowerRadiusLimit = 50;
+                camera.upperRadiusLimit = 300;
+
+                // Light
+                const light = new BABYLON.PointLight("light", BABYLON.Vector3.Zero(), scene);
+                light.intensity = 2;
+                //const envTexture = new BABYLON.CubeTexture("https://playground.babylonjs.com/textures/space", scene);
+                //scene.environmentTexture = envTexture;
+                //scene.createDefaultSkybox(envTexture, true, 1000);
+
+                // Sun
+                sun = BABYLON.MeshBuilder.CreateSphere("sun", { diameter: 20 }, scene);
+                const sunMaterial = new BABYLON.StandardMaterial("sunMaterial", scene);
+                sunMaterial.emissiveColor = new BABYLON.Color3(1, 1, 0);
+                sunMaterial.diffuseColor = new BABYLON.Color3(1, 1, 0);
+                sun.material = sunMaterial;
+
+                // Earth
+                earth = BABYLON.MeshBuilder.CreateSphere("earth", { diameter: 5 }, scene);
+                const earthMaterial = new BABYLON.StandardMaterial("earthMaterial", scene);
+                earthMaterial.diffuseColor = new BABYLON.Color3(0.2, 0.5, 1);
+                earthMaterial.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+                earth.material = earthMaterial;
+                earth.position = new BABYLON.Vector3(50, 0, 0);
+
+                // Moon
+                moon = BABYLON.MeshBuilder.CreateSphere("moon", { diameter: 3 }, scene);
+                const moonMaterial = new BABYLON.StandardMaterial("moonMaterial", scene);
+                moonMaterial.diffuseColor = new BABYLON.Color3(0.8, 0.8, 0.8);
+                moon.material = moonMaterial;
+                moon.position = new BABYLON.Vector3(57, 0, 0);
+
+                // Create a shadow generator
+                var shadowGenerator = new BABYLON.ShadowGenerator(1024, light);
+                shadowGenerator.getShadowMap().renderList.push(moon); 
+                shadowGenerator.getShadowMap().renderList.push(earth); 
+
+                // Add shadow caster and receiver to the shadow generator
+                earth.receiveShadows = true;
+                moon.receiveShadows = true;
+/*
+                // Shadow generator
+                const shadowGenerator = new BABYLON.ShadowGenerator(1024, light);
+               //add dude, true means add children as well
+               shadowGenerator.addShadowCaster(earth, true);
+*/
+                // Orbit lines
+                const earthOrbitRadius = 50;
+                const moonOrbitRadius = 7;
+
+                const earthOrbit = BABYLON.MeshBuilder.CreateTorus("earthOrbit", {
+                    thickness: 0.1,
+                    diameter: earthOrbitRadius * 2
+                }, scene);
+                earthOrbit.rotation.x = Math.PI/2;
+
+                const moonOrbit = BABYLON.MeshBuilder.CreateTorus("moonOrbit", {
+                    thickness: 0.05,
+                    diameter: moonOrbitRadius * 2
+                }, scene);
+                moonOrbit.rotation.x = Math.PI/2;
+                moonOrbit.parent = earth;
+
+                const orbitMaterial = new BABYLON.StandardMaterial("orbitMaterial", scene);
+                orbitMaterial.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+                orbitMaterial.alpha = 0.2;
+                earthOrbit.material = orbitMaterial;
+                moonOrbit.material = orbitMaterial;
+
+                // Add glow layer
+                const gl = new BABYLON.GlowLayer("glow", scene);
+                gl.intensity = 0.5;
+
+                return scene;
+            };
+
+            scene = createScene();
+
+            let earthAngle = 0;
+            let moonAngle = 0;
+
+            engine.runRenderLoop(function() {
+                if (!animationPaused) {
+                    // Earth orbit
+                    earthAngle += 0.005 * speedMultiplier;
+                    earth.position.x = 50 * Math.cos(earthAngle);
+                    earth.position.z = 50 * Math.sin(earthAngle);
+                    earth.rotation.y += 0.02 * speedMultiplier;
+
+                    // Moon orbit
+                    moonAngle += 0.015 * speedMultiplier;
+                    moon.position.x = earth.position.x + 7 * Math.cos(moonAngle);
+                    moon.position.z = earth.position.z + 7 * Math.sin(moonAngle);
+
+                    if (followEarth) {
+                        camera.setTarget(earth.position);
+                    }
+                }
+                scene.render();
+            });
+
+            // Hide loading text when scene is ready
+            loadingText.style.display = 'none';
+
+            // Window resize handler
+            window.addEventListener('resize', function() {
+                engine.resize();
+            });
+
+            // Control functions
+            window.toggleAnimation = function() {
+                animationPaused = !animationPaused;
+            };
+
+            window.adjustSpeed = function(multiplier) {
+                speedMultiplier *= multiplier;
+            };
+
+            window.toggleCamera = function() {
+                followEarth = !followEarth;
+                if (!followEarth) {
+                    camera.setTarget(BABYLON.Vector3.Zero());
+                }
+            };
+
+            // Touch controls
+            let touchStartX = 0;
+            canvas.addEventListener('touchstart', function(e) {
+                touchStartX = e.touches[0].clientX;
+            });
+
+            canvas.addEventListener('touchmove', function(e) {
+                const touchX = e.touches[0].clientX;
+                const deltaX = touchX - touchStartX;
+
+                if (Math.abs(deltaX) > 10) {
+                    adjustSpeed(deltaX > 0 ? 1.1 : 0.9);
+                    touchStartX = touchX;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
